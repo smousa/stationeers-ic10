@@ -1,0 +1,172 @@
+# ON/OFF
+define TRUE 1
+define FALSE 0
+
+# Inward/Outward
+define INWARD 1
+define OUTWARD 0
+
+# Vents
+define AirVent           HASH("AirVent")
+define OxygenVent        HASH("OxygenVent")
+define CarbonDioxideVent HASH("CarbonDioxideVent")
+define NitrogenVent      HASH("NitrogenVent")
+
+# Sensor
+define Sensor             HASH("InteriorSensor")
+
+# Tolerances
+alias PressureTolerance      d0
+alias OxygenTolerance        d1
+alias CarbonDioxideTolerance d2
+alias PollutantTolerance     d3
+
+define PressureToleranceMin      PressureTolerance      d2
+define PressureToleranceMax      PressureTolerance      d3
+define OxygenToleranceMin        OxygenTolerance        d2
+define OxygenToleranceMax        OxygenTolerance        d3
+define CarbonDioxideToleranceMin CarbonDioxideTolerance d2
+define CarbonDioxideToleranceMax CarbonDioxideTolerance d3
+define PollutantToleranceMin     PollutantTolerance     d2
+define PollutantToleranceMax     PollutantTolerance     d3
+
+# Power Settings
+define PowerAir           0
+define PowerOxygen        1
+define PowerCarbonDioxide 2
+define PowerNitrogen      3
+
+alias Power r0
+
+# Atmosphere Settings
+define AtmospherePressureLow       0
+define AtmospherePressureHigh      1
+define AtmosphereOxygenLow         2
+define AtmosphereOxygenHigh        3
+define AtmosphereCarbonDioxideLow  4
+define AtmosphereCarbonDioxideHigh 5
+define AtmospherePollutantLow      6
+define AtmospherePollutantHigh     7
+
+alias Atmosphere r1
+
+# Masks
+define AirMask           $02 # PressureHigh
+define OxygenMask        $A5 # PollutantHigh, CarbonDioxideHigh, OxygenLow, PressureLow
+define CarbonDioxideMask $10 # CarbonDioxideLow
+define NitrogenMask      $08 # OxygenHigh
+
+# Initialize Vents
+sb AirVent Lock TRUE
+sb AirVent On   FALSE
+sb AirVent Mode INWARD
+
+sb OxygenVent Lock TRUE
+sb OxygenVent On   FALSE
+sb OxygenVent Mode OUTWARD
+
+sb CarbonDioxideVent Lock TRUE
+sb CarbonDioxideVent On   FALSE
+sb CarbonDioxideVent Mode OUTWARD
+
+sb NitrogenVent Lock TRUE
+sb NitrogenVent On   FALSE
+sb NitrogenVent Mode OUTWARD
+
+## External pressure
+l  r15 PressureToleranceMin
+sb AirVent PressureExternal r15
+
+l  r15 PressureToleranceMax
+sb OxygenVent PressureExternal r15
+sb CarbonDioxideVent PressureExternal r15
+sb NitrogenVent PressureExternal r15
+
+# Begin program execution
+main:
+  # Clear registers
+  move Power 0
+  move Atmosphere 0
+
+  # Get the pressure, min, max
+  lb r15 Sensor Pressure Average
+
+  ## Pressure Min
+  lb r14 PressureToleranceMin
+  slt r13 r15 r14
+  sll r12 r13 AtmospherePressureLow
+  or Atmosphere Atmosphere r12
+
+  ## Pressure Max
+  lb r14 PressureToleranceMax
+  sge r13 r15 r14
+  sll r12 r13 AtmospherePressureHigh
+  or Atmosphere Atmosphere r12
+  
+  # Get oxygen ratio, min, max
+  lb r15 Sensor RatioOxygen Average
+
+  ## Oxygen Min
+  lb r14 OxygenToleranceMin
+  slt r13 r15 r14
+  sll r12 r13 AtmosphereOxygenLow
+  or Atmosphere Atmosphere r12
+
+  ## Oxygen Max
+  lb r14 OxygenToleranceMax
+  sge r13 r15 r14
+  sll r12 r13 AtmosphereOxygenHigh
+  or Atmosphere Atmosphere r12
+
+  # Get carbon dioxide ratio, min, max
+  lb r15 Sensor RatioCarbonDioxide Average
+
+  ## Carbon Dioxide Min
+  lb r14 CarbonDioxideToleranceMin
+  slt r13 r15 r14
+  sll r12 r13 AtmosphereCarbonDioxideLow
+  or Atmosphere Atmosphere r12
+
+  ## Carbon Dioxide Max
+  lb r14 CarbonDioxideToleranceMax
+  sge r13 r15 r14
+  sll r12 r13 AtmosphereCarbonDioxideHigh
+  or Atmosphere Atmosphere r12
+
+  # Get pollutant ratio, min, max
+  lb r15 Sensor RatioPollutant Average
+  
+  ## Pollutant Min
+  lb r14 PollutantToleranceMin
+  slt r13 r15 r14
+  sll r12 r13 AtmospherePollutantLow
+  or Atmosphere Atmosphere r12
+
+  ## Pollutant Max
+  lb r14 PollutantToleranceMax
+  sge r13 r15 r14
+  sll r12 r13 AtmospherePollutantHigh
+  or Atmosphere Atmosphere r12
+
+  # Compute state for Air
+  and r15 Atmosphere AirMask
+  sgtz r14 r15
+  sb AirVent On r14
+
+  # Compute state for Oxygen
+  and r15 Atmosphere OxygenMask
+  sgtz r14 r15
+  sb OxygenVent On r14
+
+  # Compute state for Carbon Dioxide
+  and r15 Atmosphere CarbonDioxideMask
+  sgtz r14 r15
+  sb CarbonDioxideVent On r14
+
+  # Compute state for Nitrogen
+  and r15 Atmosphere NitrogenMask
+  sgtz r14 r15
+  sb NitrogenVent On r14
+   
+  yield
+  j main
