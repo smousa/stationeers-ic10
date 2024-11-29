@@ -7,36 +7,26 @@ define INWARD 1
 define OUTWARD 0
 
 # Vents
+define ActiveVent        HASH("StructureActiveVent")
 define AirVent           HASH("AirVent")
 define OxygenVent        HASH("OxygenVent")
 define CarbonDioxideVent HASH("CarbonDioxideVent")
 define NitrogenVent      HASH("NitrogenVent")
 
 # Sensor
-define Sensor             HASH("InteriorSensor")
+define GasSensor          HASH("StructureGasSensor")
+define Sensor             HASH("InteriorGasSensor")
 
 # Tolerances
-alias PressureTolerance      d0
-alias OxygenTolerance        d1
-alias CarbonDioxideTolerance d2
-alias PollutantTolerance     d3
-
-define PressureToleranceMin      PressureTolerance      d2
-define PressureToleranceMax      PressureTolerance      d3
-define OxygenToleranceMin        OxygenTolerance        d2
-define OxygenToleranceMax        OxygenTolerance        d3
-define CarbonDioxideToleranceMin CarbonDioxideTolerance d2
-define CarbonDioxideToleranceMax CarbonDioxideTolerance d3
-define PollutantToleranceMin     PollutantTolerance     d2
-define PollutantToleranceMax     PollutantTolerance     d3
-
-# Power Settings
-define PowerAir           0
-define PowerOxygen        1
-define PowerCarbonDioxide 2
-define PowerNitrogen      3
-
-alias Power r0
+define Dial                      HASH("StructureLogicDial")
+define PressureToleranceMin      HASH("PressureToleranceMin")
+define PressureToleranceMax      HASH("PressureToleranceMax")
+define OxygenToleranceMin        HASH("OxygenToleranceMin")  
+define OxygenToleranceMax        HASH("OxygenToleranceMax") 
+define CarbonDioxideToleranceMin HASH("CarbonDioxideToleranceMin")
+define CarbonDioxideToleranceMax HASH("CarbonDioxideToleranceMax")
+define PollutantToleranceMin     HASH("PollutantToleranceMin")
+define PollutantToleranceMax     HASH("PollutantToleranceMax")
 
 # Atmosphere Settings
 define AtmospherePressureLow       0
@@ -48,7 +38,7 @@ define AtmosphereCarbonDioxideHigh 5
 define AtmospherePollutantLow      6
 define AtmospherePollutantHigh     7
 
-alias Atmosphere r1
+alias Atmosphere r0
 
 # Masks
 define AirMask           $02 # PressureHigh
@@ -74,76 +64,75 @@ sb NitrogenVent On   FALSE
 sb NitrogenVent Mode OUTWARD
 
 ## External pressure
-l  r15 PressureToleranceMin
-sb AirVent PressureExternal r15
+lbn r15 Dial PressureToleranceMin Setting Average
+sbn ActiveVent AirVent PressureExternal r15
 
-l  r15 PressureToleranceMax
-sb OxygenVent PressureExternal r15
-sb CarbonDioxideVent PressureExternal r15
-sb NitrogenVent PressureExternal r15
+lbn r15 Dial PressureToleranceMax Setting Average
+sbn ActiveVent OxygenVent PressureExternal r15
+sbn ActiveVent CarbonDioxideVent PressureExternal r15
+sbn ActiveVent NitrogenVent PressureExternal r15
 
 # Begin program execution
 main:
   # Clear registers
-  move Power 0
   move Atmosphere 0
 
   # Get the pressure, min, max
-  lb r15 Sensor Pressure Average
+  lbn r15 GasSensor Sensor Pressure Average
 
   ## Pressure Min
-  lb r14 PressureToleranceMin
+  lbn r14 Dial PressureToleranceMin Setting Average
   slt r13 r15 r14
   sll r12 r13 AtmospherePressureLow
   or Atmosphere Atmosphere r12
 
   ## Pressure Max
-  lb r14 PressureToleranceMax
+  lbn r14 Dial PressureToleranceMax Setting Average
   sge r13 r15 r14
   sll r12 r13 AtmospherePressureHigh
   or Atmosphere Atmosphere r12
   
   # Get oxygen ratio, min, max
-  lb r15 Sensor RatioOxygen Average
+  lbn r15 GasSensor Sensor RatioOxygen Average
 
   ## Oxygen Min
-  lb r14 OxygenToleranceMin
+  lbn r14 Dial OxygenToleranceMin Setting Average
   slt r13 r15 r14
   sll r12 r13 AtmosphereOxygenLow
   or Atmosphere Atmosphere r12
 
   ## Oxygen Max
-  lb r14 OxygenToleranceMax
+  lbn r14 Dial OxygenToleranceMax Setting Average
   sge r13 r15 r14
   sll r12 r13 AtmosphereOxygenHigh
   or Atmosphere Atmosphere r12
 
   # Get carbon dioxide ratio, min, max
-  lb r15 Sensor RatioCarbonDioxide Average
+  lbn r15 GasSensor Sensor RatioCarbonDioxide Average
 
   ## Carbon Dioxide Min
-  lb r14 CarbonDioxideToleranceMin
+  lbn r14 Dial CarbonDioxideToleranceMin Setting Average
   slt r13 r15 r14
   sll r12 r13 AtmosphereCarbonDioxideLow
   or Atmosphere Atmosphere r12
 
   ## Carbon Dioxide Max
-  lb r14 CarbonDioxideToleranceMax
+  lbn r14 Dial CarbonDioxideToleranceMax Setting Average
   sge r13 r15 r14
   sll r12 r13 AtmosphereCarbonDioxideHigh
   or Atmosphere Atmosphere r12
 
   # Get pollutant ratio, min, max
-  lb r15 Sensor RatioPollutant Average
+  lbn r15 GasSensor Sensor RatioPollutant Average
   
   ## Pollutant Min
-  lb r14 PollutantToleranceMin
+  lbn r14 Dial PollutantToleranceMin Setting Average
   slt r13 r15 r14
   sll r12 r13 AtmospherePollutantLow
   or Atmosphere Atmosphere r12
 
   ## Pollutant Max
-  lb r14 PollutantToleranceMax
+  lbn r14 Dial PollutantToleranceMax Setting Average
   sge r13 r15 r14
   sll r12 r13 AtmospherePollutantHigh
   or Atmosphere Atmosphere r12
@@ -151,22 +140,22 @@ main:
   # Compute state for Air
   and r15 Atmosphere AirMask
   sgtz r14 r15
-  sb AirVent On r14
+  sbn ActiveVent AirVent On r14
 
   # Compute state for Oxygen
   and r15 Atmosphere OxygenMask
   sgtz r14 r15
-  sb OxygenVent On r14
+  sbn ActiveVent OxygenVent On r14
 
   # Compute state for Carbon Dioxide
   and r15 Atmosphere CarbonDioxideMask
   sgtz r14 r15
-  sb CarbonDioxideVent On r14
+  sbn ActiveVent CarbonDioxideVent On r14
 
   # Compute state for Nitrogen
   and r15 Atmosphere NitrogenMask
   sgtz r14 r15
-  sb NitrogenVent On r14
+  sbn ActiveVent NitrogenVent On r14
    
   yield
   j main
