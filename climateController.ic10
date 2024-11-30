@@ -47,21 +47,21 @@ define CarbonDioxideMask $10 # CarbonDioxideLow
 define NitrogenMask      $08 # OxygenHigh
 
 # Initialize Vents
-sb AirVent Lock TRUE
-sb AirVent On   FALSE
-sb AirVent Mode INWARD
+sbn ActiveVent AirVent Lock TRUE
+sbn ActiveVent AirVent On   FALSE
+sbn ActiveVent AirVent Mode INWARD
 
-sb OxygenVent Lock TRUE
-sb OxygenVent On   FALSE
-sb OxygenVent Mode OUTWARD
+sbn ActiveVent OxygenVent Lock TRUE
+sbn ActiveVent OxygenVent On   FALSE
+sbn ActiveVent OxygenVent Mode OUTWARD
 
-sb CarbonDioxideVent Lock TRUE
-sb CarbonDioxideVent On   FALSE
-sb CarbonDioxideVent Mode OUTWARD
+sbn ActiveVent CarbonDioxideVent Lock TRUE
+sbn ActiveVent CarbonDioxideVent On   FALSE
+sbn ActiveVent CarbonDioxideVent Mode OUTWARD
 
-sb NitrogenVent Lock TRUE
-sb NitrogenVent On   FALSE
-sb NitrogenVent Mode OUTWARD
+sbn ActiveVent NitrogenVent Lock TRUE
+sbn ActiveVent NitrogenVent On   FALSE
+sbn ActiveVent NitrogenVent Mode OUTWARD
 
 ## External pressure
 lbn r15 Dial PressureToleranceMin Setting Average
