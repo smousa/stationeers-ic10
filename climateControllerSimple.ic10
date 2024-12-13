@@ -18,6 +18,7 @@ alias Thermostat         d0
 alias Pressure           d1
 alias RatioOxygen        d2
 alias RatioCarbonDioxide d3
+alias RatioNitrogen      d4
 
 define RoomGasSensor     HASH("RoomGasSensor")
 define AirConditioner    HASH("AirConditioner")
@@ -70,8 +71,6 @@ main:
   lbn r1 GasSensor RoomGasSensor Pressure Average
   sgt r2 r1 r0
   sbn ActiveVent ExhaustVent On r2
-  slt r2 r1 r0
-  sbn ActiveVent NitrogenVent On r2
 
   # Maintain Oxygen Levels
   l r0 RatioOxygen Setting
@@ -86,6 +85,13 @@ main:
   lbn r1 GasSensor RoomGasSensor RatioCarbonDioxide Average
   slt r2 r1 r0
   sbn ActiveVent CarbonDioxideVent On r2
+
+  # Maintain Nitrogen Levels
+  l r0 RatioNitrogen Setting 
+  mul r0 r0 0.01
+  lbn r1 GasSensor RoomGasSensor RatioNitrogen Setting
+  slt r2 r1 r0
+  sbn ActiveVent NitrogenVent On r2
 
   yield
   j main
