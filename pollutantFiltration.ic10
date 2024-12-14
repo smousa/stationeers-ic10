@@ -1,0 +1,41 @@
+define OFF 0
+define ON 1
+
+define IDLE 0
+define ACTIVE 1
+
+define TargetPressure 3648
+define TargetTemp 298
+define CondensationTemp 425
+
+alias Self db
+alias PurgeValve d0
+
+s PurgeValve Lock ON
+s PurgeValve Setting TargetPressure
+
+main:
+  # Reset devices
+  s Self Mode IDLE
+  s PurgeValve On OFF
+
+  # Check pressure
+  l r0 Self PressureInput
+  blez r0 done
+
+  # Check temperature
+  l r0 Self TemperatureInput
+  sle r1 r0 CondensationTemp
+  sgt r2 r0 TargetTemp
+  and r3 r1 r2
+  s PurgeValve On r3
+  bgt r0 TargetTemp done
+
+  # Ensure no pollutant
+  l r0 Self RatioPollutantInput
+  seqz r1 r0
+  s Self Mode r1
+  
+done:
+  yield
+  j main
