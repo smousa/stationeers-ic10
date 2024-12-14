@@ -14,14 +14,15 @@ alias PurgeValve d0
 s PurgeValve Lock ON
 s PurgeValve Setting TargetPressure
 
+s Self Mode IDLE
+
 main:
   # Reset devices
-  s Self Mode IDLE
   s PurgeValve On OFF
 
   # Check pressure
   l r0 Self PressureInput
-  blez r0 done
+  blez r0 idle
 
   # Check temperature
   l r0 Self TemperatureInput
@@ -29,10 +30,13 @@ main:
   sgt r2 r0 TargetTemp
   and r3 r1 r2
   s PurgeValve On r3
-  bgt r0 TargetTemp done
+  beqz r2 idle
 
-  yield
   s Self Mode ACTIVE
+  j done
+
+idle:
+  s Self Mode IDLE
   
 done:
   yield
