@@ -31,10 +31,8 @@ main:
   s PurgeValve On r3
   bgt r0 TargetTemp done
 
-  # Ensure no pollutant
-  l r0 Self RatioPollutantInput
-  seqz r1 r0
-  s Self Mode r1
+  yield
+  s Self Mode ACTIVE
   
 done:
   yield
