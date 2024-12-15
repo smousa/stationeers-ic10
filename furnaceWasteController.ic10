@@ -30,16 +30,13 @@ define FilterNitrousOxideM HASH("ItemGasFilterNitrousOxideM")
 define FilterNitrousOxideL HASH("ItemGasFilterNitrousOxideL")
 define FilterNitrousOxideInf HASH("ItemGasFilterNitrousOxideInfinite")
 
-define FilterVolatile HASH("ItemGasFilterVolatile")
-define FilterVolatileM HASH("ItemGasFilterVolatileM")
-define FilterVolatileL HASH("ItemGasFilterVolatileL")
-define FilterVolatileInf HASH("ItemGasFilterVolatileInfinite")
-
-# Inputs
-alias self db
+define FilterVolatile HASH("ItemGasFilterVolatiles")
+define FilterVolatileM HASH("ItemGasFilterVolatilesM")
+define FilterVolatileL HASH("ItemGasFilterVolatilesL")
+define FilterVolatileInf HASH("ItemGasFilterVolatilesInfinite")
 
 # Initialize devices
-s self Mode IDLE
+s db Mode IDLE
 sbn VolumePump CombustiblePipe Lock ON
 sbn VolumePump CombustiblePipe On OFF
 sbn VolumePump CombustiblePipe Setting PumpRate
@@ -61,13 +58,13 @@ main:
   j main
 
 set_filtration:
-  s self Mode IDLE
+  s db Mode IDLE
 slot_0:
-  ls r0 self 0 Occupied
+  ls r0 db 0 Occupied
   beqz r0 end_set_filtration
-  ls r0 self 0 OccupantHash
+  ls r0 db 0 OccupantHash
   beq r0 FilterNitrousOxideInf slot_1
-  ls r1 self 0 Quantity
+  ls r1 db 0 Quantity
   beqz r1 end_set_filtration
   # nitrous oxide
   seq r1 r0 FilterNitrousOxide
@@ -77,11 +74,11 @@ slot_0:
   or r1 r1 r2
   beqz r1 end_set_filtration
 slot_1:
-  ls r0 self 1 Occupied
+  ls r0 db 1 Occupied
   beqz r0 end_set_filtration
-  ls r0 self 1 OccupantHash
+  ls r0 db 1 OccupantHash
   beq r0 FilterVolatileInf input
-  ls r1 self 1 Quantity
+  ls r1 db 1 Quantity
   beqz r1 end_set_filtration
   # volatile
   seq r1 r0 FilterVolatile
@@ -91,32 +88,32 @@ slot_1:
   or r1 r1 r2
   beqz r1 end_set_filtration
 input:
-  l r0 self PressureInput
+  l r0 db PressureInput
   beqz r0 end_set_filtration
-  l r0 self CombustionInput
+  l r0 db CombustionInput
   bnez r0 end_set_filtration
 output:
-  l r0 self PressureOutput
+  l r0 db PressureOutput
   bge r0 MaxPressure end_set_filtration
 output2:
-  l r0 self PressureOutput2
+  l r0 db PressureOutput2
   bge r0 MaxPressure end_set_filtration
-  l r1 self RatioPollutantOutput2
+  l r1 db RatioPollutantOutput2
   mul r1 r1 r0
-  bgt r1 MaxPollutantPressure end_set_filtration
-  l r0 self TemperatureOutput2
+  bgt r1 PollutantMinPressure end_set_filtration
+  l r0 db TemperatureOutput2
   slt r1 r0 MinTemperature
   sgt r2 r0 PollutantCondensationTemperature
   or r1 r1 r2
   beqz r1 end_set_filtration
-  s self Mode ACTIVE
+  s db Mode ACTIVE
 end_set_filtration:
   j ra
 
 set_output_network:
-  l r0 self PressureOutput
-  l r1 self RatioNitrousOxideOutput
-  l r2 self RatioVolatileOutput
+  l r0 db PressureOutput
+  l r1 db RatioNitrousOxideOutput
+  l r2 db RatioVolatilesOutput
   sgtz r3 r0
   add r4 r1 r2
   seqz r4 r4
@@ -127,17 +124,4 @@ set_output_network:
   j ra
 
 set_output2_network:
-  l r0 self PressureOutput2
-  l r1 self TemperatureOutput2
-  l r2 self RatioLiquidPollutantOutput2
-  sgtz r3 r0
-  seqz r4 r2
-  and r3 r3 r4
-  sle r4 r1 MaxTemperature
-  and r3 r3 r4
-  sbn VolumePump PollutantPipe On r3
-  sle r3 r1 PollutantCondensationTemperature
-  sgt r4 r1 MaxTemperature
-  and r3 r3 r4
-  sbn PurgeValve PollutantPipe On r3
-  j ra
+  l r0 db PressureOutput2
