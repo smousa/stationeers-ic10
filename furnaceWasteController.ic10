@@ -1,0 +1,143 @@
+# ON/OFF
+define OFF 0
+define ON 1
+
+# ACTIVE/IDLE
+define IDLE 0
+define ACTIVE 1
+
+# Configuration
+define MaxTemperature 303
+define MinTemperature 293
+define MaxPressure 51675.75
+define PollutantCondensationTemperature 425
+define PollutantCondensationPressure 3736
+define PollutantMinPressure 6000
+define NitrousOxideCondensationPressure 1096
+define PumpRate 2.0
+
+# Structures
+define VolumePump HASH("StructureVolumePump")
+define PurgeValve HASH("StructurePurgeValve")
+
+# Device Classes
+define CombustiblePipe HASH("CombustiblePipeNetwork")
+define PollutantPipe   HASH("PollutantPipeNetwork")
+
+# Slot Filters
+define FilterNitrousOxide HASH("ItemGasFilterNitrousOxide")
+define FilterNitrousOxideM HASH("ItemGasFilterNitrousOxideM")
+define FilterNitrousOxideL HASH("ItemGasFilterNitrousOxideL")
+define FilterNitrousOxideInf HASH("ItemGasFilterNitrousOxideInfinite")
+
+define FilterVolatile HASH("ItemGasFilterVolatile")
+define FilterVolatileM HASH("ItemGasFilterVolatileM")
+define FilterVolatileL HASH("ItemGasFilterVolatileL")
+define FilterVolatileInf HASH("ItemGasFilterVolatileInfinite")
+
+# Inputs
+alias self db
+
+# Initialize devices
+s self Mode IDLE
+sbn VolumePump CombustiblePipe Lock ON
+sbn VolumePump CombustiblePipe On OFF
+sbn VolumePump CombustiblePipe Setting PumpRate
+sbn PurgeValve CombustiblePipe Lock ON
+sbn PurgeValve CombustiblePipe On OFF
+sbn PurgeValve CombustiblePipe Setting NitrousOxideCondensationPressure
+sbn VolumePump PollutantPipe Lock ON
+sbn VolumePump PollutantPipe On OFF
+sbn VolumePump PollutantPipe Setting PumpRate
+sbn PurgeValve PollutantPipe Lock ON
+sbn PurgeValve PollutantPipe On OFF
+sbn PurgeValve PollutantPipe Setting PollutantCondensationPressure
+
+main:
+  jal set_filtration
+  jal set_output_network
+  jal set_output2_network
+  yield
+  j main
+
+set_filtration:
+  s self Mode IDLE
+slot_0:
+  ls r0 self 0 Occupied
+  beqz r0 end_set_filtration
+  ls r0 self 0 OccupantHash
+  beq r0 FilterNitrousOxideInf slot_1
+  ls r1 self 0 Quantity
+  beqz r1 end_set_filtration
+  # nitrous oxide
+  seq r1 r0 FilterNitrousOxide
+  seq r2 r0 FilterNitrousOxideM
+  or r1 r1 r2
+  seq r2 r0 FilterNitrousOxideL
+  or r1 r1 r2
+  beqz r1 end_set_filtration
+slot_1:
+  ls r0 self 1 Occupied
+  beqz r0 end_set_filtration
+  ls r0 self 1 OccupantHash
+  beq r0 FilterVolatileInf input
+  ls r1 self 1 Quantity
+  beqz r1 end_set_filtration
+  # volatile
+  seq r1 r0 FilterVolatile
+  seq r2 r0 FilterVolatileM
+  or r1 r1 r2
+  seq r2 r0 FilterVolatileL
+  or r1 r1 r2
+  beqz r1 end_set_filtration
+input:
+  l r0 self PressureInput
+  beqz r0 end_set_filtration
+  l r0 self Combustion
+  bnez r0 end_set_filtration
+output:
+  l r0 self PressureOutput
+  bge r0 MaxPressure end_set_filtration
+output2:
+  l r0 self PressureOutput2
+  bge r0 MaxPressure end_set_filtration
+  l r1 self RatioPollutantOutput2
+  mul r1 r1 r0
+  bgt r1 MaxPollutantPressure end_set_filtration
+  l r0 self TemperatureOutput2
+  slt r1 r0 MinTemperature
+  sgt r2 r0 PollutantCondensationTemperature
+  or r1 r1 r2
+  beqz r1 end_set_filtration
+  s self Mode ACTIVE
+end_set_filtration:
+  j ra
+
+set_output_network:
+  l r0 self PressureOutput
+  l r1 self RatioNitrousOxideOutput
+  l r2 self RatioVolatileOutput
+  sgtz r3 r0
+  add r4 r1 r2
+  seqz r4 r4
+  and r3 r3 r4
+  sbn VolumePump CombustiblePipe On r3
+  sgtz r3 r2
+  sbn PurgeValve CombustiblePipe On r3
+  j ra
+
+set_output2_network:
+  l r0 self PressureOutput2
+  l r1 self TemperatureOutput2
+  l r2 self RatioLiquidPollutantOutput2
+  sgtz r3 r0
+  seqz r4 r2
+  and r3 r3 r4
+  sle r4 r1 MaxTemperature
+  and r3 r3 r4
+  sbn VolumePump PollutantPipe On r3
+  sle r3 r1 PollutantCondensationTemperature
+  sgt r4 r1 MaxTemperature
+  and r3 r3 r4
+  sbn PurgeValve PollutantPipe On r3
+  j ra
