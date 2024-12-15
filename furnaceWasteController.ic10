@@ -93,7 +93,7 @@ slot_1:
 input:
   l r0 self PressureInput
   beqz r0 end_set_filtration
-  l r0 self Combustion
+  l r0 self CombustionInput
   bnez r0 end_set_filtration
 output:
   l r0 self PressureOutput
