@@ -21,60 +21,52 @@ sbn VolumePump Out2 On OFF
 sbn PurgeValve Out2 On OFF
 sbn DigitalValve Out2 On OFF
 main:
-  jal setFiltration
-  jal setOutputNetwork
-  jal setOutput2Network
-  yield
-  j main
-setFiltration:
-  ls r0 db 0 Occupied
-  ls r1 db 0 OccupantHash
-  ls r2 db 0 Quantity
-  beqz r0 filtrationIdle
-  seq r15 r1 HASH("ItemGasFilterNitrousOxide")
-  seq r14 r1 HASH("ItemGasFilterNitrousOxideM")
+  l r0 OFF
+  ls r1 db 0 Occupied
+  ls r2 db 0 OccupantHash
+  ls r3 db 0 Quantity
+  beqz r1 flushFiltration
+  seq r15 r2 HASH("ItemGasFilterNitrousOxide")
+  seq r14 r3 HASH("ItemGasFilterNitrousOxideM")
   or r15 r15 r14
-  seq r14 r1 HASH("ItemGasFilterNitrousOxideL")
+  seq r14 r2 HASH("ItemGasFilterNitrousOxideL")
   or r15 r15 r14
-  sgtz r14 r2
+  sgtz r14 r3
   and r15 r15 r14
-  seq r14 r1 HASH("ItemGasFilterNitrousOxideInfinite")
+  seq r14 r2 HASH("ItemGasFilterNitrousOxideInfinite")
   beqz r15 filtrationIdle
-  ls r0 db 1 Occupied
-  ls r1 db 1 OccupantHash
-  ls r2 db 1 Quantity
-  beqz r0 filtrationIdle
-  seq r15 r1 HASH("ItemGasFilterVolatiles")
-  seq r14 r1 HASH("ItemGasFilterVolatilesM")
+  ls r1 db 1 Occupied
+  ls r2 db 1 OccupantHash
+  ls r3 db 1 Quantity
+  beqz r1 flushFiltration
+  seq r15 r2 HASH("ItemGasFilterVolatiles")
+  seq r14 r3 HASH("ItemGasFilterVolatilesM")
   or r15 r15 r14
-  seq r14 r1 HASH("ItemGasFilterVolatilesL")
+  seq r14 r2 HASH("ItemGasFilterVolatilesL")
   or r15 r15 r14
-  sgtz r14 r2
+  sgtz r14 r3
   and r15 r15 r14
-  seq r14 r1 HASH("ItemGasFilterVolatilesInfinite")
-  beqz r15 filtrationIdle
-  l r0 db PressureInput
-  l r1 db CombustionInput
-  beqz r0 filtrationIdle
-  bnez r1 filtrationIdle
-  l r0 db PressureOutput
-  bge r0 MaxP filtrationIdle
-  l r0 db PressureOutput2
-  l r1 db RatioPollutantOutput2
-  l r2 db TemperatureOutput2
-  bge r0 MaxP filtrationIdle
-  mul r15 r0 r1
-  bgt r15 6000 filtrationIdle # Pol cnd pressure 
-  slt r15 r2 425 # Pol cnd temp
-  sgt r14 r2 MinT
+  seq r14 r2 HASH("ItemGasFilterVolatilesInfinite")
+  beqz r15 flushFiltration
+  l r1 db PressureInput
+  l r2 db CombustionInput
+  beqz r1 flushFiltration 
+  bnez r2 flushFiltration
+  l r1 db PressureOutput
+  bge r2 MaxP flushFiltration
+  l r1 db PressureOutput2
+  l r2 db RatioPollutantOutput2
+  l r3 db TemperatureOutput2
+  bge r1 MaxP flushFiltration
+  mul r15 r0 r2
+  bgt r15 6000 flushFiltration # Pol cnd pressure 
+  slt r15 r3 425 # Pol cnd temp
+  sgt r14 r3 MinT
   and r15 r15 r14
-  bnez r15 filtrationIdle
-  s db Mode ACTIVE
-  j ra
-filtrationIdle:
-  s db Mode IDLE
-  j ra
-setOutputNetwork:
+  bnez r15 flushFiltration
+  l r0 ON
+flushFiltration:
+  s db Mode r0
   l r0 db PressureOutput
   l r1 db RatioNitrousOxideOutput
   l r2 db RatioVolatilesOutput
@@ -89,9 +81,7 @@ setOutputNetwork:
   sgtz r15 r2
   sbn PurgeValve Out1 On r15
   sgt r15 r4 431 # N2O cnd temp
-  sbn DigitalValve Out1 On r15 
-  j ra  
-setOutput2Network:
+  sbn DigitalValve Out1 On r15
   l r0 db PressureOutput2
   l r1 db TemperatureOutput2
   l r2 db RatioLiquidPollutantOutput2
@@ -123,7 +113,7 @@ setOutput2Network:
   add r15 r15 MaxT
   add r15 r15 BufT
   sgt r7 r1 r15
-flushOutput2:
   sbn PurgeValve Out2 On r7
   sbn DigitalValve Out2 On r7
-  j ra
+  yield
+  j main
