@@ -81,10 +81,10 @@ checkOutput2:
   mul r1 r1 r0
   bgt r1 PolCndP filtrationIdle
   l r0 db TemperatureOutput2
-  slt r1 r0 MinT
-  sgt r2 r0 PolCndT
-  or r1 r1 r2
-  beqz r1 filtrationIdle
+  sle r15 r0 PolCndT
+  sgt r14 r0 MinT
+  and r15 r15 r14
+  bnez r15 filtrationIdle
   s db Mode ACTIVE
   j ra
 filtrationIdle:
@@ -105,17 +105,18 @@ setOutputNetwork:
 setOutput2Network:
   l r0 db PressureOutput2
   l r1 db TemperatureOutput2
-  l r2 db RatioPollutantOutput2
-  sgtz r3 r0
-  seqz r4 r2
-  and r3 r3 r4
-  sle r4 r1 MaxT
-  and r3 r3 r4
-  sbn VolumePump Out2 On r3
-  sle r3 r1 PolCndT
-  sgt r4 r1 MaxT
-  and r3 r3 r4
-  slt r4 r1 MinT
-  or r3 r3 r4
-  sbn PurgeValve Out2 On r3
+  l r2 db RatioLiquidPollutantOutput2
+  l r3 db RatioPollutantOutput2
+  sgtz r15 r0
+  sle  r14 r1 MaxT
+  and  r15 r15 r14
+  seqz r14 r2
+  and  r15 r15 r14
+  seqz r14 r3
+  and  r15 r15 r14
+  sbn VolumePump Out2 On r15
+  sle r15 r1 PolCndT
+  sgt r14 r1 MaxT
+  and r15 r15 r14
+  sbn PurgeValve Out2 On r15
   j ra
