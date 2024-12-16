@@ -26,34 +26,32 @@ main:
   ls r2 db 0 OccupantHash
   ls r3 db 0 Quantity
   beqz r1 flushFiltration
+  beq r2 HASH("ItemGasFilterNitrousOxideInfinite") flushFiltration
+  beqz r3 flushFiltration
   seq r15 r2 HASH("ItemGasFilterNitrousOxide")
-  seq r14 r3 HASH("ItemGasFilterNitrousOxideM")
+  seq r14 r2 HASH("ItemGasFilterNitrousOxideM")
   or r15 r15 r14
   seq r14 r2 HASH("ItemGasFilterNitrousOxideL")
   or r15 r15 r14
-  sgtz r14 r3
-  and r15 r15 r14
-  seq r14 r2 HASH("ItemGasFilterNitrousOxideInfinite")
-  beqz r15 filtrationIdle
+  beqz r15 flushFiltration
   ls r1 db 1 Occupied
   ls r2 db 1 OccupantHash
   ls r3 db 1 Quantity
   beqz r1 flushFiltration
+  beq r2 HASH("ItemGasFilterVolatilesInfinite") flushFiltration
+  beqz r3 flushFiltration
   seq r15 r2 HASH("ItemGasFilterVolatiles")
   seq r14 r3 HASH("ItemGasFilterVolatilesM")
   or r15 r15 r14
   seq r14 r2 HASH("ItemGasFilterVolatilesL")
   or r15 r15 r14
-  sgtz r14 r3
-  and r15 r15 r14
-  seq r14 r2 HASH("ItemGasFilterVolatilesInfinite")
   beqz r15 flushFiltration
   l r1 db PressureInput
   l r2 db CombustionInput
   beqz r1 flushFiltration 
   bnez r2 flushFiltration
   l r1 db PressureOutput
-  bge r2 MaxP flushFiltration
+  bge r1 MaxP flushFiltration
   l r1 db PressureOutput2
   l r2 db RatioPollutantOutput2
   l r3 db TemperatureOutput2
@@ -113,6 +111,7 @@ flushFiltration:
   add r15 r15 MaxT
   add r15 r15 BufT
   sgt r7 r1 r15
+flushOutput2:
   sbn PurgeValve Out2 On r7
   sbn DigitalValve Out2 On r7
   yield
