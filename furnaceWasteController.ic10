@@ -1,36 +1,32 @@
-# ON/OFF
 define OFF 0
-define ON 1
-# ACTIVE/IDLE
-define IDLE 0
-define ACTIVE 1
-# Configuration
+define ON  1
+# Config
+define MaxP 51675.75
 define MaxT 303
 define MinT 293
-define MaxP 51675.75
-define PolCndT 425
-define PolCndP 6000
+define BufT 313
+define PolCT  425  # condensation temp
+define PolCP  6000 # condensation pressure
+define PolL   2000 # latent heat J/mol
+define N2OCT  431  # condensation temp
+define O2Cap  21.1 # molar heat capacity
+define N2Cap  20.6
+define CO2Cap 28.2
 # Structures
 define VolumePump HASH("StructureVolumePump")
 define PurgeValve HASH("StructurePurgeValve")
+define DigitalValve HASH("StructureDigitalValve")
 # Device Classes
 define Out1 HASH("CombustiblePipeNetwork")
-define Out2   HASH("PollutantPipeNetwork")
-# Slot Filters
-define FilterN2O HASH("ItemGasFilterNitrousOxide")
-define FilterN2OM HASH("ItemGasFilterNitrousOxideM")
-define FilterN2OL HASH("ItemGasFilterNitrousOxideL")
-define FilterN2OInf HASH("ItemGasFilterNitrousOxideInfinite")
-define FilterVol HASH("ItemGasFilterVolatiles")
-define FilterVolM HASH("ItemGasFilterVolatilesM")
-define FilterVolL HASH("ItemGasFilterVolatilesL")
-define FilterVolInf HASH("ItemGasFilterVolatilesInfinite")
+define Out2 HASH("PollutantPipeNetwork")
 # Initialize devices
 s db Mode IDLE
 sbn VolumePump Out1 On OFF
 sbn PurgeValve Out1 On OFF
+sbn DigitalValve Out1 On OFF
 sbn VolumePump Out2 On OFF
 sbn PurgeValve Out2 On OFF
+sbn DigitalValve Out2 On OFF
 main:
   jal setFiltration
   jal setOutputNetwork
@@ -38,51 +34,46 @@ main:
   yield
   j main
 setFiltration:
-checkSlot0:
   ls r0 db 0 Occupied
+  ls r1 db 0 OccupantHash
+  ls r2 db 0 Quantity
   beqz r0 filtrationIdle
-  ls r0 db 0 OccupantHash
-  beq r0 FilterN2OInf checkSlot1
-  ls r1 db 0 Quantity
-  beqz r1 filtrationIdle
-  # nitrous oxide
-  seq r1 r0 FilterN2O
-  seq r2 r0 FilterN2OM
-  or r1 r1 r2
-  seq r2 r0 FilterN2OL
-  or r1 r1 r2
-  beqz r1 filtrationIdle
-checkSlot1:
+  seq r15 r1 HASH("ItemGasFilterNitrousOxide")
+  seq r14 r1 HASH("ItemGasFilterNitrousOxideM")
+  or r15 r15 r14
+  seq r14 r1 HASH("ItemGasFilterNitrousOxideL")
+  or r15 r15 r14
+  sgtz r14 r2
+  and r15 r15 r14
+  seq r14 r1 HASH("ItemGasFilterNitrousOxideInfinite")
+  beqz r15 filtrationIdle
   ls r0 db 1 Occupied
+  ls r1 db 1 OccupantHash
+  ls r2 db 1 Quantity
   beqz r0 filtrationIdle
-  ls r0 db 1 OccupantHash
-  beq r0 FilterVolInf checkInput
-  ls r1 db 1 Quantity
-  beqz r1 filtrationIdle
-  # volatile
-  seq r1 r0 FilterVol
-  seq r2 r0 FilterVolM
-  or r1 r1 r2
-  seq r2 r0 FilterVolL
-  or r1 r1 r2
-  beqz r1 filtrationIdle
-checkInput:
+  seq r15 r1 HASH("ItemGasFilterVolatiles")
+  seq r14 r1 HASH("ItemGasFilterVolatilesM")
+  or r15 r15 r14
+  seq r14 r1 HASH("ItemGasFilterVolatilesL")
+  or r15 r15 r14
+  sgtz r14 r2
+  and r15 r15 r14
+  seq r14 r1 HASH("ItemGasFilterVolatilesInfinite")
+  beqz r15 filtrationIdle
   l r0 db PressureInput
+  l r1 db CombustionInput
   beqz r0 filtrationIdle
-  l r0 db CombustionInput
-  bnez r0 filtrationIdle
-checkOutput:
+  bnez r1 filtrationIdle
   l r0 db PressureOutput
   bge r0 MaxP filtrationIdle
-checkOutput2:
   l r0 db PressureOutput2
-  bge r0 MaxP filtrationIdle
   l r1 db RatioPollutantOutput2
-  mul r1 r1 r0
-  bgt r1 PolCndP filtrationIdle
-  l r0 db TemperatureOutput2
-  sle r15 r0 PolCndT
-  sgt r14 r0 MinT
+  l r2 db TemperatureOutput2
+  bge r0 MaxP filtrationIdle
+  mul r15 r0 r1
+  bgt r15 PolCP filtrationIdle
+  slt r15 r2 PolCT
+  sgt r14 r2 MinT
   and r15 r15 r14
   bnez r15 filtrationIdle
   s db Mode ACTIVE
@@ -94,29 +85,51 @@ setOutputNetwork:
   l r0 db PressureOutput
   l r1 db RatioNitrousOxideOutput
   l r2 db RatioVolatilesOutput
-  sgtz r3 r0
-  add r4 r1 r2
-  seqz r4 r4
-  and r3 r3 r4
-  sbn VolumePump Out1 On r3
-  sgtz r3 r2
-  sbn PurgeValve Out1 On r3
-  j ra
+  l r3 db RatioLiquidNitrousOxideOutput
+  l r4 db TemperatureOutput
+  sgtz r15 r0
+  add r14 r1 r2
+  add r14 r14 r3
+  seqz r14 r14
+  and r15 r14 r14
+  sbn VolumePump Out1 On r15
+  sgtz r15 r2
+  sbn PurgeValve Out1 On r15
+  sgt r15 r4 N2OCT
+  sbn DigitalValve Out1 On r15 
+  j ra  
 setOutput2Network:
   l r0 db PressureOutput2
   l r1 db TemperatureOutput2
   l r2 db RatioLiquidPollutantOutput2
   l r3 db RatioPollutantOutput2
-  sgtz r15 r0
-  sle  r14 r1 MaxT
-  and  r15 r15 r14
-  seqz r14 r2
-  and  r15 r15 r14
-  seqz r14 r3
-  and  r15 r15 r14
-  sbn VolumePump Out2 On r15
-  sle r15 r1 PolCndT
-  sgt r14 r1 MaxT
+  l r4 db RatioOxygenOutput2
+  l r5 db RatioNitrogenOutput2
+  l r6 db RatioCarbonDioxideOutput2
+  l r7 OFF
+  sle r15 r1 MaxT
+  sge r14 r1 MinT
   and r15 r15 r14
-  sbn PurgeValve Out2 On r15
+  add r14 r2 r3
+  seqz r14 r14
+  and r15 r15 r14
+  sbn VolumePump Out2 On r15
+  bnez r15 flushOutput2
+  l r7 ON
+  mul r15 O2Cap r4
+  mul r14 N2Cap r5 
+  add r15 r15 r14
+  mul r14 CO2Cap r6
+  add r15 r15 r14 
+  bgtz r15 flushOutput2
+  mul r15 r15 r3
+  mul r15 r15 PolL
+  add r14 r4 r5
+  add r14 r14 r6
+  div r15 r15 r14
+  add r15 r15 BufT
+  sgt r7 r1 r15
+flushOutput2:
+  sbn PurgeValve Out2 On r7
+  sbn DigitalValve Out2 On r7
   j ra
