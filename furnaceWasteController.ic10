@@ -2,16 +2,9 @@ define OFF 0
 define ON  1
 # Config
 define MaxP 51675.75
+define BufT 10
 define MaxT 303
 define MinT 293
-define BufT 313
-define PolCT  425  # condensation temp
-define PolCP  6000 # condensation pressure
-define PolL   2000 # latent heat J/mol
-define N2OCT  431  # condensation temp
-define O2Cap  21.1 # molar heat capacity
-define N2Cap  20.6
-define CO2Cap 28.2
 # Structures
 define VolumePump HASH("StructureVolumePump")
 define PurgeValve HASH("StructurePurgeValve")
@@ -71,8 +64,8 @@ setFiltration:
   l r2 db TemperatureOutput2
   bge r0 MaxP filtrationIdle
   mul r15 r0 r1
-  bgt r15 PolCP filtrationIdle
-  slt r15 r2 PolCT
+  bgt r15 6000 filtrationIdle # Pol cnd pressure 
+  slt r15 r2 425 # Pol cnd temp
   sgt r14 r2 MinT
   and r15 r15 r14
   bnez r15 filtrationIdle
@@ -95,7 +88,7 @@ setOutputNetwork:
   sbn VolumePump Out1 On r15
   sgtz r15 r2
   sbn PurgeValve Out1 On r15
-  sgt r15 r4 N2OCT
+  sgt r15 r4 431 # N2O cnd temp
   sbn DigitalValve Out1 On r15 
   j ra  
 setOutput2Network:
@@ -116,17 +109,18 @@ setOutput2Network:
   sbn VolumePump Out2 On r15
   bnez r15 flushOutput2
   l r7 ON
-  mul r15 O2Cap r4
-  mul r14 N2Cap r5 
+  mul r15 21.1 r4 # O2 molar heat cap
+  mul r14 20.6 r5 # N2 molar heat cap
   add r15 r15 r14
-  mul r14 CO2Cap r6
+  mul r14 28.2 r6 # CO2 molar heat cap
   add r15 r15 r14 
   bgtz r15 flushOutput2
   mul r15 r15 r3
-  mul r15 r15 PolL
+  mul r15 r15 2000 # Pol latent heat J/mol
   add r14 r4 r5
   add r14 r14 r6
   div r15 r15 r14
+  add r15 r15 MaxT
   add r15 r15 BufT
   sgt r7 r1 r15
 flushOutput2:
