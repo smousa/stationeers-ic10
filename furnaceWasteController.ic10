@@ -96,16 +96,16 @@ checkOutput2:
 flushOutput2VolumePump:
   sbn VolumePump Out2 r15
   move r14 WasteTemperatureMax
-  mul r13 r2 OxygenSpecificHeat
-  mul r12 r3 NitrogenSpecificHeat
-  add r13 r13 r12
-  mul r12 r4 CarbonDioxideSpecificHeat
-  add r13 r13 r12
+  add r13 r2 r3
+  add r13 r13 r4
   mul r13 r13 r5
   mul r13 r13 PollutantLatentHeat
-  beqz r13 checkTargetTemperature
-  add r12 r2 r3
-  add r12 r12 r4
+  beqz r13 checkTargetTemperature 
+  mul r12 r2 OxygenSpecificHeat
+  mul r11 r3 NitrogenSpecificHeat
+  add r12 r12 r11
+  mul r11 r4 CarbonDioxideSpecificHeat
+  add r12 r12 r11
   div r14 r13 r12
   add r14 r14 WasteTemperature
 checkTargetTemperature:
