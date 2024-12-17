@@ -60,11 +60,13 @@ checkPipes:
 flushFiltration:
   s db Mode r15
 checkOutput:
+  l r0 sb PressureOutput
   l r1 sb TemperatureOutput
   l r2 sb RatioVolatilesOutput
   l r3 sb RatioNitrousOxideOutput
   l r4 sb RatioLiquidNitrousOxideOutput
-  move r15 0
+  sge r15 r0 MaxPressure
+  bnez r15 flushOutputVolumePump
   beqz r1 flushOutputVolumePump
   bgtz r2 flushOutputVolumePump
   bgtz r3 flushOutputVolumePump
