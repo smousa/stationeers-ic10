@@ -21,27 +21,24 @@ define Out1 HASH("CombustiblePipeNetwork")
 define Out2 HASH("PollutantPipeNetwork")
 
 main:
+  move r15 0
 checkFilterSlot0:
   ls r2 db 0 OccupantHash
   ls r3 db 0 Quantity
-  snez r15 r3
-  beqz r15 flushFiltration
+  beqz r3 flushFiltration
   beq r2 HASH("ItemGasFilterNitrousOxide") checkFilterSlot1
   beq r2 HASH("ItemGasFilterNitrousOxideM") checkFilterSlot1
   beq r2 HASH("ItemGasFilterNitrousOxideL") checkFilterSlot1
   beq r2 HASH("ItemGasFilterNitrousOxideInfinite") checkFilterSlot1
-  move r15 0
   j flushFiltration
 checkFilterSlot1:
   ls r2 db 1 OccupantHash
   ls r3 db 1 Quantity
-  snez r15 r3
-  beqz r15 flushFiltration
+  beqz r3 flushFiltration
   beq r2 HASH("ItemGasFilterVolatiles") checkPipes
   beq r2 HASH("ItemGasFilterVolatilesM") checkPipes
   beq r2 HASH("ItemGasFilterVolatilesL") checkPipes
   beq r2 HASH("ItemGasFilterVolatilesInfinite") checkPipes
-  move r15 0
   j flushFiltration
 checkPipes:
   l r1 sb PressureInput
@@ -50,7 +47,6 @@ checkPipes:
   l r4 sb PressureOutput2
   l r5 sb TemperatureOutput2
   l r6 sb RatioPollutantOutput2
-  move r15 0
   beqz r1 flushFiltration
   bnez r2 flushFiltration
   bge r3 MaxPressure flushFiltration
