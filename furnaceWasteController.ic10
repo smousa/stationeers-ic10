@@ -78,7 +78,7 @@ flushOutputVolumePump:
   sbn VolumePump Out1 r15
   sgtz r15 r2
   sbn PurgeValve Out1 r15
-  sgt r15 r1 NitrousOxideCondensationTemperature
+  sge r15 r1 NitrousOxideCondensationTemperature
   sbn DigitalValve Out1 r15
 checkOutput2:
   l r1 sb TemperatureOutput2
