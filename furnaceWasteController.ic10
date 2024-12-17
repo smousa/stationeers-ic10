@@ -112,9 +112,9 @@ checkTargetTemperature:
   sgt r15 r1 r14
   sbn DigitalValve Out2 r15
   slt r14 r1 WasteTemperatureMin
-  and r15 r15 r14
-  sgtz r14 r1
-  and r15 r15 r14
+  sgtz r13 r1
+  and r14 r14 r13
+  or r15 r15 r14
   sbn PurgeValve Out2 r15
 yield
 j main
