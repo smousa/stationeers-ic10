@@ -93,7 +93,7 @@ checkOutput:
 flushOutput:
   sbn VolumePump Out1 On r15
   snez r15 r2
-  sbn Purge valve Out1 On r15
+  sbn PurgeValve Out1 On r15
 checkOutput2:
   l r1 db TemperatureOutput2
   l r2 db RatioPollutantOutput2
