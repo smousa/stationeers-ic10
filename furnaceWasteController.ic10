@@ -18,6 +18,7 @@ define Out1 HASH("CombustiblePipeNetwork")
 define Out2 HASH("PollutantPipeNetwork")
 
 alias TargetTemperature r0
+s db Mode 0
 
 main:
 computeTargetTemperature:
@@ -64,19 +65,15 @@ checkPipes:
   l r4 db PressureOutput2
   l r5 db TemperatureOutput2
   l r6 db RatioPollutantOutput2
-  l r7 db Mode
   beqz r1 flushFiltration
   bnez r2 flushFiltration
   bge r3 MaxPressure flushFiltration
   bge r4 MaxPressure flushFiltration
   mul r14 r4 r6
   bgt r14 PollutantCondensationPressure flushFiltration
-  move r15 1
-  blt r5 WasteTemperatureMin flushFiltration 
-  bge r5 PollutantCondensationTemperature
-  move r15 r7
+  l r15 db Mode
   blt r5 PollutantCondensationTemperature flushFiltration
-  move r15 0
+  slt r5 WasteTemperatureMin
 flushFiltration:
   s db Mode r15
 checkOutput:
