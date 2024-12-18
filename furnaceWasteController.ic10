@@ -38,6 +38,7 @@ checkFilterSlot1:
   beq r2 HASH("ItemGasFilterVolatilesInfinite") checkPipes
   j flushFiltration
 checkPipes:
+  l r0 db Mode
   l r1 db PressureInput
   l r2 db CombustionInput
   l r3 db PressureOutput
@@ -50,10 +51,12 @@ checkPipes:
   bge r4 MaxPressure flushFiltration
   mul r14 r4 r6
   bgt r14 PollutantCondensationPressure flushFiltration
-  slt r14 r5 PollutantCondensationTemperature
-  sge r13 r5 WasteTemperatureMin
-  beq r14 r13 flushFiltration
   move r15 1
+  blt r5 WasteTemperatureMin flushFiltration 
+  bge r5 PollutantCondensationTemperature
+  move r15 r0
+  blt r5 WasteTemperatureMax flushFiltration
+  move r15 0
 flushFiltration:
   s db Mode r15
 checkOutput:
