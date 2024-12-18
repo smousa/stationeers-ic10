@@ -105,10 +105,6 @@ flushOutput2VolumePump:
   add r14 r14 WasteTemperatureMax
 checkTargetTemperature:
   sgt r15 r1 r14
-  slt r14 r1 WasteTemperatureMin
-  sgtz r13 r1
-  and r14 r14 r13
-  or r15 r15 r14
   sbn PurgeValve Out2 On r15
 yield
 j main
