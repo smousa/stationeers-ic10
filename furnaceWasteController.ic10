@@ -4,8 +4,6 @@ define WasteTemperature 303
 define WasteTemperatureMax 313
 define WasteTemperatureMin 293
 # Properties
-define NitrousOxideCondensationTemperature 431 # K
-define NitrousOxideCondensationPressure 2000   # kPa
 define PollutantCondensationTemperature 425    # K
 define PollutantCondensationPressure 6000      # kPa
 define PollutantLatentHeat 2000                # J/mol
