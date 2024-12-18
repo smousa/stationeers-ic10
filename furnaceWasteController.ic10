@@ -75,7 +75,7 @@ checkPipes:
   blt r5 WasteTemperatureMin flushFiltration 
   bge r5 PollutantCondensationTemperature
   move r15 r7
-  blt r5 TargetTemperature flushFiltration
+  blt r5 PollutantCondensationTemperature flushFiltration
   move r15 0
 flushFiltration:
   s db Mode r15
