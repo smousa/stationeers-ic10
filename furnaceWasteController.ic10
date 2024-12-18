@@ -15,7 +15,6 @@ define CarbonDioxideSpecificHeat 28.2          # J/(K*mol)
 # Structures
 define VolumePump   HASH("StructureVolumePump")
 define PurgeValve   HASH("StructurePurgeValve")
-define DigitalValve HASH("StructureDigitalValve")
 # Devices
 define Out1 HASH("CombustiblePipeNetwork")
 define Out2 HASH("PollutantPipeNetwork")
@@ -76,8 +75,6 @@ flushOutputVolumePump:
   sbn VolumePump Out1 On r15
   sgtz r15 r2
   sbn PurgeValve Out1 On r15
-  sge r15 r1 NitrousOxideCondensationTemperature
-  sbn DigitalValve Out1 On r15
 checkOutput2:
   l r1 db TemperatureOutput2
   l r2 db RatioOxygenOutput2
@@ -105,10 +102,9 @@ flushOutput2VolumePump:
   mul r11 r4 CarbonDioxideSpecificHeat
   add r12 r12 r11
   div r14 r13 r12
-  add r14 r14 WasteTemperature
+  add r14 r14 WasteTemperatureMax
 checkTargetTemperature:
   sgt r15 r1 r14
-  sbn DigitalValve Out2 On r15
   slt r14 r1 WasteTemperatureMin
   sgtz r13 r1
   and r14 r14 r13
