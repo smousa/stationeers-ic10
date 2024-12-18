@@ -87,7 +87,7 @@ checkOutput2:
   l r6 db RatioLiquidPollutantOutput2
   move r15 0
   bgt r1 WasteTemperature flushOutput2VolumePump
-  blt r1 WasteTemperatureMin flushOutput2VolumePump
+  beqz r1 flushOutput2VolumePump
   bgtz r5 flushOutput2VolumePump
   bgtz r6 flushOutput2VolumePump
   move r15 1
