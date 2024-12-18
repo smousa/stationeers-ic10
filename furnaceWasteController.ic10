@@ -71,9 +71,10 @@ checkPipes:
   bge r4 MaxPressure flushFiltration
   mul r14 r4 r6
   bgt r14 PollutantCondensationPressure flushFiltration
-  l r15 db Mode
-  blt r5 PollutantCondensationTemperature flushFiltration
-  slt r15 r5 WasteTemperatureMin
+  move r15 1
+  blt r15 WasteTemperatureMin flushFiltration
+  bge r5 PollutantCondensationTemperature flushFiltration
+  j checkOutput
 flushFiltration:
   s db Mode r15
 checkOutput:
