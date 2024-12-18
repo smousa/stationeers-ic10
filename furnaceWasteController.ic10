@@ -17,11 +17,31 @@ define PurgeValve   HASH("StructurePurgeValve")
 define Out1 HASH("CombustiblePipeNetwork")
 define Out2 HASH("PollutantPipeNetwork")
 
+alias TargetTemperature r0
+
 main:
-  move r15 0
+computeTargetTemperature:
+  l r1 db RatioOxygenOutput2 
+  l r2 db RatioNitrogenOutput2
+  l r3 db RatioCarbonDioxideOutput2 
+  l r4 db RatioPollutantOutput2
+  move TargetTemperature WasteTemperatureMax
+  add r15 r1 r2
+  add r15 r15 r3
+  mul r15 r15 r4
+  mul r15 r15 PollutantLatentHeat
+  beqz r15 checkFilterSlot0
+  mul r14 r1 OxygenSpecificHeat
+  mul r13 r2 NitrogenSpecificHeat
+  add r14 r14 r13
+  mul r13 r3 CarbonDioxideSpecificHeat
+  add r14 r14 r13 
+  div r15 r15 r14
+  add TargetTemperature TargetTemperature r15
 checkFilterSlot0:
   ls r2 db 0 OccupantHash
   ls r3 db 0 Quantity
+  move r15 0
   beqz r3 flushFiltration
   beq r2 HASH("ItemGasFilterNitrousOxide") checkFilterSlot1
   beq r2 HASH("ItemGasFilterNitrousOxideM") checkFilterSlot1
@@ -38,13 +58,13 @@ checkFilterSlot1:
   beq r2 HASH("ItemGasFilterVolatilesInfinite") checkPipes
   j flushFiltration
 checkPipes:
-  l r0 db Mode
   l r1 db PressureInput
   l r2 db CombustionInput
   l r3 db PressureOutput
   l r4 db PressureOutput2
   l r5 db TemperatureOutput2
   l r6 db RatioPollutantOutput2
+  l r7 db Mode
   beqz r1 flushFiltration
   bnez r2 flushFiltration
   bge r3 MaxPressure flushFiltration
@@ -54,58 +74,39 @@ checkPipes:
   move r15 1
   blt r5 WasteTemperatureMin flushFiltration 
   bge r5 PollutantCondensationTemperature
-  move r15 r0
-  blt r5 WasteTemperatureMax flushFiltration
+  move r15 r7
+  blt r5 TargetTemperature flushFiltration
   move r15 0
 flushFiltration:
   s db Mode r15
 checkOutput:
-  l r0 db PressureOutput
   l r1 db TemperatureOutput
   l r2 db RatioVolatilesOutput
   l r3 db RatioNitrousOxideOutput
   l r4 db RatioLiquidNitrousOxideOutput
-  sge r15 r0 MaxPressure
-  bnez r15 flushOutputVolumePump
-  beqz r1 flushOutputVolumePump
-  bgtz r2 flushOutputVolumePump
-  bgtz r3 flushOutputVolumePump
-  bgtz r4 flushOutputVolumePump
+  move r15 0
+  beqz r1 flushOutput
+  bgtz r2 flushOutput
+  bgtz r3 flushOutput
+  bgtz r4 flushOutput
   move r15 1
-flushOutputVolumePump:
+flushOutput:
   sbn VolumePump Out1 On r15
-  sgtz r15 r2
-  sbn PurgeValve Out1 On r15
+  snez r15 r2
+  sbn Purge valve Out1 On r15
 checkOutput2:
   l r1 db TemperatureOutput2
-  l r2 db RatioOxygenOutput2
-  l r3 db RatioNitrogenOutput2
-  l r4 db RatioCarbonDioxideOutput2
-  l r5 db RatioPollutantOutput2
-  l r6 db RatioLiquidPollutantOutput2
+  l r2 db RatioPollutantOutput2
+  l r3 db RatioLiquidPollutantOutput2
   move r15 0
-  bgt r1 WasteTemperature flushOutput2VolumePump
-  beqz r1 flushOutput2VolumePump
-  bgtz r5 flushOutput2VolumePump
-  bgtz r6 flushOutput2VolumePump
+  beqz r1 flushOutput2
+  bgt r1 WasteTemperature flushOutput2 
+  bgtz r2 flushOutput2
+  bgtz r3 flushOutput2
   move r15 1
-flushOutput2VolumePump:
+flushOutput2:
   sbn VolumePump Out2 On r15
-  move r14 WasteTemperatureMax
-  add r13 r2 r3
-  add r13 r13 r4
-  mul r13 r13 r5
-  mul r13 r13 PollutantLatentHeat
-  beqz r13 checkTargetTemperature
-  mul r12 r2 OxygenSpecificHeat
-  mul r11 r3 NitrogenSpecificHeat
-  add r12 r12 r11
-  mul r11 r4 CarbonDioxideSpecificHeat
-  add r12 r12 r11
-  div r13 r13 r12
-  add r14 r14 r13
-checkTargetTemperature:
-  sgt r15 r1 r14
+  sgt r15 r1 TargetTemperature
   sbn PurgeValve Out2 On r15
 yield
 j main
