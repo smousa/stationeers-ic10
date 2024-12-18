@@ -73,7 +73,7 @@ checkPipes:
   bgt r14 PollutantCondensationPressure flushFiltration
   l r15 db Mode
   blt r5 PollutantCondensationTemperature flushFiltration
-  slt r5 WasteTemperatureMin
+  slt r15 r5 WasteTemperatureMin
 flushFiltration:
   s db Mode r15
 checkOutput:
