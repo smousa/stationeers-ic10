@@ -41,12 +41,12 @@ checkFilterSlot1:
   beq r2 HASH("ItemGasFilterVolatilesInfinite") checkPipes
   j flushFiltration
 checkPipes:
-  l r1 sb PressureInput
-  l r2 sb CombustionInput
-  l r3 sb PressureOutput
-  l r4 sb PressureOutput2
-  l r5 sb TemperatureOutput2
-  l r6 sb RatioPollutantOutput2
+  l r1 db PressureInput
+  l r2 db CombustionInput
+  l r3 db PressureOutput
+  l r4 db PressureOutput2
+  l r5 db TemperatureOutput2
+  l r6 db RatioPollutantOutput2
   beqz r1 flushFiltration
   bnez r2 flushFiltration
   bge r3 MaxPressure flushFiltration
@@ -60,11 +60,11 @@ checkPipes:
 flushFiltration:
   s db Mode r15
 checkOutput:
-  l r0 sb PressureOutput
-  l r1 sb TemperatureOutput
-  l r2 sb RatioVolatilesOutput
-  l r3 sb RatioNitrousOxideOutput
-  l r4 sb RatioLiquidNitrousOxideOutput
+  l r0 db PressureOutput
+  l r1 db TemperatureOutput
+  l r2 db RatioVolatilesOutput
+  l r3 db RatioNitrousOxideOutput
+  l r4 db RatioLiquidNitrousOxideOutput
   sge r15 r0 MaxPressure
   bnez r15 flushOutputVolumePump
   beqz r1 flushOutputVolumePump
@@ -73,18 +73,18 @@ checkOutput:
   bgtz r4 flushOutputVolumePump
   move r15 1
 flushOutputVolumePump:
-  sbn VolumePump Out1 r15
+  sbn VolumePump Out1 On r15
   sgtz r15 r2
-  sbn PurgeValve Out1 r15
+  sbn PurgeValve Out1 On r15
   sge r15 r1 NitrousOxideCondensationTemperature
-  sbn DigitalValve Out1 r15
+  sbn DigitalValve Out1 On r15
 checkOutput2:
-  l r1 sb TemperatureOutput2
-  l r2 sb RatioOxygenOutput2
-  l r3 sb RatioNitrogenOutput2
-  l r4 sb RatioCarbonDioxideOutput2
-  l r5 sb RatioPollutantOutput2
-  l r6 sb RatioLiquidPollutantOutput2
+  l r1 db TemperatureOutput2
+  l r2 db RatioOxygenOutput2
+  l r3 db RatioNitrogenOutput2
+  l r4 db RatioCarbonDioxideOutput2
+  l r5 db RatioPollutantOutput2
+  l r6 db RatioLiquidPollutantOutput2
   move r15 0
   bgt r1 WasteTemperature flushOutput2VolumePump
   blt r1 WasteTemperatureMin flushOutput2VolumePump
@@ -92,13 +92,13 @@ checkOutput2:
   bgtz r6 flushOutput2VolumePump
   move r15 1
 flushOutput2VolumePump:
-  sbn VolumePump Out2 r15
+  sbn VolumePump Out2 On r15
   move r14 WasteTemperatureMax
   add r13 r2 r3
   add r13 r13 r4
   mul r13 r13 r5
   mul r13 r13 PollutantLatentHeat
-  beqz r13 checkTargetTemperature 
+  beqz r13 checkTargetTemperature
   mul r12 r2 OxygenSpecificHeat
   mul r11 r3 NitrogenSpecificHeat
   add r12 r12 r11
@@ -108,11 +108,11 @@ flushOutput2VolumePump:
   add r14 r14 WasteTemperature
 checkTargetTemperature:
   sgt r15 r1 r14
-  sbn DigitalValve Out2 r15
+  sbn DigitalValve Out2 On r15
   slt r14 r1 WasteTemperatureMin
   sgtz r13 r1
   and r14 r14 r13
   or r15 r15 r14
-  sbn PurgeValve Out2 r15
+  sbn PurgeValve Out2 On r15
 yield
 j main
