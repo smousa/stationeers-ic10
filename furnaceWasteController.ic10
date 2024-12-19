@@ -26,10 +26,12 @@ computeTargetTemperature:
   l r2 db RatioNitrogenOutput2
   l r3 db RatioCarbonDioxideOutput2 
   l r4 db RatioPollutantOutput2
+  l r5 db RatioLiquidPollutantOutput2 
   move TargetTemperature WasteTemperatureMax
   add r15 r1 r2
   add r15 r15 r3
-  mul r15 r15 r4
+  add r14 r4 r5
+  mul r15 r15 r14
   mul r15 r15 PollutantLatentHeat
   beqz r15 checkFilterSlot0
   mul r14 r1 OxygenSpecificHeat
