@@ -22,10 +22,6 @@ alias cDestPipe r3
 alias mDestPipe r4
 
 main:
-  # Initialize Values
-  move TargetTemperature WasteTemperature
-  move TargetVolume 0
-
   # Compute partial specific heat (o2, n2, co2) of the source pipe
   l r5 SourcePipe RatioOxygenOutput2
   l r6 SourcePipe RatioNitrogenOutput2
@@ -60,15 +56,20 @@ main:
   l r8 SourcePipe TemperatureOutput2
   l r9 SourcePipe PressureOutput2
   l r10 DestPipe TemperatureInput
-  
+
   # Compute target temperature of the source pipe
-  bnan cSourcePipe flush
+  move TargetTemperature WasteTemperature
+  move TargetVolume 0
+  bnan cSourcePipe flush  
   add r15 r5 r6
   mul r15 r15 PollutantLatentHeat
   div r15 r15 cSourcePipe
   add TargetTemperature TargetTemperature r15
 
-  # Compute target volume of the pump  
+  # Compute target volume of the pump
+  sle r15 r8 TargetTemperature
+  select TargetVolume r15 r7 0
+  bnez r15 flush  
   sub r15 WasteTemperature r10
   mul r15 r15 mDestPipe
   mul r15 r15 cDestPipe
@@ -84,9 +85,6 @@ main:
   move TargetVolume r15
   
 flush:
-  sle r15 r8 TargetTemperature
-  select r15 r8 r15 0
-  select TargetVolume r15 r7 TargetVolume  
   seqz r15 TargetVolume
   s PurgeValve On r15
   add r15 r5 r6
