@@ -67,10 +67,8 @@ main:
   mul r15 r15 PollutantLatentHeat
   div r15 r15 cSourcePipe
   add TargetTemperature TargetTemperature r15
-  ble r8 TargetTemperature flush
 
   # Compute target volume of the pump
-  move TargetVolume 0
   sub r15 WasteTemperature r10
   mul r15 r15 mDestPipe
   mul r15 r15 cDestPipe
@@ -78,8 +76,10 @@ main:
   mul r15 r15 IdealGasConstant
   div r15 r15 r9
   div r15 r15 cSourcePipe
-  sub r14 r8 WasteTemperature
+  sub r14 r8 WasteTemperature 
   div r15 r15 r14
+  blez r14 flush
+  move TargetVolume 0
   bnan r15 flush
   blez r15 flush
   min TargetVolume r15 r7
@@ -87,7 +87,9 @@ main:
 flush:
   seqz r15 TargetVolume
   s PurgeValve On r15
-  add r15 r5 r6
+  seqz r15 r8
+  add r15 r15 r5
+  add r15 r15 r6
   seqz r15 r15
   s Pump On r15
   s Pump Setting TargetVolume
