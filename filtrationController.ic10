@@ -19,6 +19,7 @@ main:
   l r15 Source TemperatureInput
   bge r15 WasteTemperatureMin check
   sb Filtration Mode 0
+  beqz r15 done
   sb PipeHeater On 1
   j done
   
