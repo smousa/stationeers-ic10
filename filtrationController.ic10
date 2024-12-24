@@ -1,0 +1,57 @@
+# Configuration
+define MaxPressure 51765.75    # kPa
+define WasteTemperatureMin 293 # K
+
+# Structures
+define Filtration HASH("StructureFiltration")
+define PipeHeater HASH("StructurePipeHeater")
+
+# Networks
+define OxygenFilter HASH("OxygenFiltration")
+define NitrogenFilter HASH("NitrogenFiltration")
+define CarbonDioxideFilter HASH("CarbonDioxideFiltration")
+
+# I/O
+alias Source db
+
+main:
+  # Check Input Pipe Temperature
+  l r15 Source TemperatureInput
+  sge r15 WasteTemperatureMin check
+  sb Filtration Mode 0
+  sb PipeHeater On 1
+  j done
+  
+check:
+  sb PipeHeater On 0
+  push OxygenFilter
+  jal checkFilter
+  push NitrogenFilter
+  jal checkFilter
+  push CarbonDioxideFilter
+  jal checkFilter
+  
+done:
+  yield
+  j main
+
+checkFilter:
+  pop r0
+  
+  # Check filter life
+  move r15 0
+  lbns r14 Filtration r0 0 Quantity Minimum
+  lbns r13 Filtration r0 1 Quantity Minimum
+  add r14 r14 r13
+  beqz r14 flushFilter
+
+  # Check output and waste pressure (o2)
+  lbn r14 Filtration r0 PressureOutput
+  lbn r13 Filtration r0 PressureOutput2
+  bge r14 MaxPressure flushFilter
+  bge r13 MaxPressure flushFilter
+  move r15 1
+
+flushFilter:
+  sbn Filtration r0 Mode r15
+  j ra
