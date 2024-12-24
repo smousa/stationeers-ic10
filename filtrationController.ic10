@@ -17,7 +17,7 @@ alias Source db
 main:
   # Check Input Pipe Temperature
   l r15 Source TemperatureInput
-  sge r15 WasteTemperatureMin check
+  bge r15 WasteTemperatureMin check
   sb Filtration Mode 0
   sb PipeHeater On 1
   j done
@@ -46,8 +46,8 @@ checkFilter:
   beqz r14 flushFilter
 
   # Check output and waste pressure
-  lbn r14 Filtration r0 PressureOutput
-  lbn r13 Filtration r0 PressureOutput2
+  lbn r14 Filtration r0 PressureOutput Maximum
+  lbn r13 Filtration r0 PressureOutput2 Maximum
   bge r14 MaxPressure flushFilter
   bge r13 MaxPressure flushFilter
   move r15 1
