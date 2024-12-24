@@ -49,19 +49,19 @@ main:
   div r15 r15 IdealGasConstant
   div r15 r15 CoolantTemperature
   blt r14 r15 checkPressure
-  sbn r15 PurgeValve CoolantPipe On 0
+  sbn PurgeValve CoolantPipe On 0
 
 checkTemperature:
-  sb r15 GasSensor Temperature Maximum
+  lb r15 GasSensor Temperature Maximum
   l r14 Thermostat Setting
   sgt r15 r15 r14
   sbn DigitalValve CoolantPipe On r15
-    
+
 checkPressure:
   l Pressure PressureSetting Setting
   mul PressureMin Pressure ToleranceMin
   mul PressureMax Pressure ToleranceMax
-  sb r15 GasSensor Pressure Average
+  lb r15 GasSensor Pressure Average
   bge r15 PressureMax highPressure
   ble r15 PressureMin lowPressure
   sbn ActiveVent WastePipe On 0
@@ -87,7 +87,7 @@ levels:
   sbn ActiveVent OxygenPipe Mode ModeOutward
   sbn ActiveVent OxygenPipe PressureExternal PressureMax
   sbn ActiveVent OxygenPipe On r15
-  
+
   # Check N2 Levels
   l Ratio NitrogenSetting Setting
   div Ratio Ratio 100
