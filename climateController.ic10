@@ -1,0 +1,110 @@
+# Configuration
+define ToleranceMin 0.99
+define ToleranceMax 1.01
+
+define ModeOutward 0
+define ModeInward 1
+
+# Properties
+define CoolantPressure 4800 # kPa
+define CoolantTemperature 425 # K
+define IdealGasConstant 8.314 # J/(mol*K)
+
+# Structures
+define GasSensor HASH("StructureGasSensor")
+define ActiveVent HASH("StructureActiveVent")
+define DigitalValve HASH("StructureDigitalValve")
+define PipeAnalyzer HASH("StructurePipeAnalyzer")
+define PurgeValve HASH("StructurePurgeValve")
+
+# Networks
+define WastePipe HASH("WastePipeNetwork")
+define OxygenPipe HASH("OxygenPipeNetwork")
+define NitrogenPipe HASH("NitrogenPipeNetwork")
+define CarbonDioxidePipe HASH("CarbonDioxidePipeNetwork")
+define CoolantPipe HASH("CoolantPipeNetwork")
+define WaterPipe HASH("WaterPipeNetwork")
+
+# Inputs
+alias Thermostat d0
+alias PressureSetting d1
+alias OxygenSetting d2
+alias NitrogenSetting d3
+alias CarbonDioxideSetting d4
+
+# Computed
+alias Pressure r0
+alias PressureMin r1
+alias PressureMax r2
+alias Ratio r3
+
+main:
+  # Check coolant network
+  lbn r15 PurgeValve CoolantPipe On Maximum
+  beqz r15 checkTemperature
+  sbn DigitalValve CoolantPipe On 1
+  lbn r15 PipeAnalyzer CoolantPipe Volume Sum
+  lbn r14 PipeAnalyzer CoolantPipe TotalMoles Sum
+  mul r15 r15 CoolantPressure
+  div r15 r15 IdealGasConstant
+  div r15 r15 CoolantTemperature
+  blt r14 r15 checkPressure
+  sbn r15 PurgeValve CoolantPipe On 0
+
+checkTemperature:
+  sb r15 GasSensor Temperature Maximum
+  l r14 Thermostat Setting
+  sgt r15 r15 r14
+  sbn DigitalValve CoolantPipe On r15
+    
+checkPressure:
+  l Pressure PressureSetting Setting
+  mul PressureMin Pressure ToleranceMin
+  mul PressureMax Pressure ToleranceMax
+  sb r15 GasSensor Pressure Average
+  bge r15 PressureMax highPressure
+  ble r15 PressureMin lowPressure
+  sbn ActiveVent WastePipe On 0
+  j levels
+
+highPressure:
+  sbn ActiveVent WastePipe Mode ModeInward
+  sbn ActiveVent WastePipe PressureExternal PressureMin
+  sbn ActiveVent WastePipe On 1
+  j levels
+
+lowPressure:
+  sbn ActiveVent WastePipe Mode ModeOutward
+  sbn ActiveVent WastePipe PressureExternal PressureMax
+  sbn ActiveVent WastePipe On 1
+
+levels:
+  # Check O2 Levels
+  l Ratio OxygenSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioOxygen Average
+  slt r15 r15 Ratio
+  sbn ActiveVent OxygenPipe Mode ModeOutward
+  sbn ActiveVent OxygenPipe PressureExternal PressureMax
+  sbn ActiveVent OxygenPipe On r15
+  
+  # Check N2 Levels
+  l Ratio NitrogenSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioNitrogen Average
+  slt r15 r15 Ratio
+  sbn ActiveVent NitrogenPipe Mode ModeOutward
+  sbn ActiveVent NitrogenPipe PressureExternal PressureMax
+  sbn ActiveVent NitrogenPipe On r15
+
+  # Check CO2 Levels
+  l Ratio CarbonDioxideSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioCarbonDioxide Average
+  slt r15 r15 Ratio
+  sbn ActiveVent CarbonDioxidePipe Mode ModeOutward
+  sbn ActiveVent CarbonDioxidePipe PressureExternal PressureMax
+  sbn ActiveVent CarbonDioxidePipe On r15
+
+  yield
+  j main
