@@ -1,6 +1,7 @@
 # Configuration
 define MaxPressure 51765.75
 define WasteTemperature 308
+define WasteTemperatureMin 261.6
 
 # Properties
 define PollutantCondensationTemperature 425 # K
@@ -12,7 +13,7 @@ define CarbonDioxideSpecificHeat 28.2       # J/(K*mol)
 
 # Structures
 define VolumePump HASH("StructureVolumePump")
-define PurgeValve HASH("StrucuturePurgeValve")
+define PurgeValve HASH("StructurePurgeValve")
 
 # Networks
 define Out1 HASH("CombustiblePipeNetwork")
@@ -36,18 +37,18 @@ main:
   bnez r14 flushFiltration
 
   # Check output pipe
-  l r14 PressureOutput
-  bge r14 PressureMax flushFiltration
+  l r14 SourcePipe PressureOutput
+  bge r14 MaxPressure flushFiltration
 
   # Check waste pipe
-  l r14 PressureOutput2
-  l r13 TemperatureOutput2
-  l r12 RatioPollutantOutput2
-  bge r14 PressureMax flushFiltration
+  l r14 SourcePipe PressureOutput2
+  l r13 SourcePipe TemperatureOutput2
+  l r12 SourcePipe RatioPollutantOutput2
+  bge r14 MaxPressure flushFiltration
   mul r11 r14 r12
   bgt r11 PollutantCondensationPressure flushFiltration
   move r15 1
-  beqz r14 flushFiltration
+  ble r13 WasteTemperatureMin flushFiltration
   bge r13 PollutantCondensationTemperature flushFiltration
   j checkOutput
 
@@ -78,7 +79,7 @@ flushOutput:
   # Compute specific heat of the source pipe (o2,n2,co2)
   l r5 SourcePipe RatioOxygenOutput2
   l r6 SourcePipe RatioNitrogenOutput2
-  l r7 SourcePipe RatioCarbonDioxide
+  l r7 SourcePipe RatioCarbonDioxideOutput2
   mul cSourcePipe r5 OxygenSpecificHeat
   mul r15 r6 NitrogenSpecificHeat
   add cSourcePipe cSourcePipe r15
@@ -93,31 +94,25 @@ flushOutput:
   l r6 SourcePipe RatioLiquidPollutantOutput2
   l r7 SourcePipe TemperatureOutput2
   l r8 SourcePipe PressureOutput2
-  l r9 DestPipe TemperatureInput
-  lbn r10 VolumePump Out2 Maximum Minimum
+  lbn r9 VolumePump Out2 Maximum Minimum
 
-  move TargetTemperature WasteTemperature
-  move TargetVolume r10
-  bnan cSourcePipe flushOutput2
-  
   # Compute target temperature of the waste pipe
-  add r15 r5 r6
-  mul r15 r15 PollutantLatentHeat
-  div r15 r15 cSourcePipe
-  add TargetTemperature TargetTemperature r15
-  ble  r7 TargetTemperature flushOutput2
-  move TargetVolume 0
+  move TargetTemperature WasteTemperature
+  add r13 r5 r6
+  bnan cSourcePipe flushOutput2
+  mul r13 r13 PollutantLatentHeat
+  div r13 r13 cSourcePipe
+  add TargetTemperature TargetTemperature r13
 
-  flushOutput2:
-    seqz r15 TargetVolume
-    sbn PurgeValve Out2 On r15
+flushOutput2:
+  sle r12 r7 TargetTemperature
+  select r14 r13 0 r12
+  select TargetVolume r12 10 0
+  seqz r15 TargetVolume
 
-    add r15 r5 r6
-    snan r14 cSourcePipe
-    add r15 r15 r14
-    seqz r15 r15
-    sbn VolumePump Out2 On r15
-    sbn VolumePump Out2 Setting TargetVolume
-  
+  sbn PurgeValve Out2 On r15
+  sbn VolumePump Out2 On r14
+  sbn VolumePump Out2 Setting TargetVolume
+
 yield
 j main
