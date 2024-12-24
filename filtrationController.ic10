@@ -45,7 +45,7 @@ checkFilter:
   add r14 r14 r13
   beqz r14 flushFilter
 
-  # Check output and waste pressure (o2)
+  # Check output and waste pressure
   lbn r14 Filtration r0 PressureOutput
   lbn r13 Filtration r0 PressureOutput2
   bge r14 MaxPressure flushFilter
