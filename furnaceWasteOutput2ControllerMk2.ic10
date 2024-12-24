@@ -1,0 +1,93 @@
+# Configuration
+define WasteTemperature 303
+
+# Properties
+define PollutantLatentHeat 2000                # J/mol
+define OxygenSpecificHeat 21.1                 # J/(K*mol)
+define NitrogenSpecificHeat 20.5               # J/(K*mol)
+define CarbonDioxideSpecificHeat 28.2          # J/(K*mol)
+define IdealGasConstant 8.314                  # J/(K*mol)
+
+# Inputs
+alias SourcePipe     d0
+alias DestPipe       d1
+alias PurgeValve     d2
+alias VolumePump     d3
+
+# Globals
+alias TargetTemperature r0
+alias TargetVolume r1
+alias cSourcePipe r2
+alias cDestPipe r3
+alias mDestPipe r4
+
+main:
+  # Compute specific heat of the source pipe (o2/n2/co2)
+  l r5 SourcePipe RatioOxygenOutput2
+  l r6 SourcePipe RatioNitrogenOutput2
+  l r7 SourcePipe RatioCarbonDioxideOutput2
+  mul cSourcePipe r5 OxygenSpecificHeat
+  mul r15 r6 NitrogenSpecificHeat
+  add cSourcePipe cSourcePipe r15
+  mul r15 r7 CarbonDioxideSpecificHeat
+  add cSourcePipe cSourcePipe r15
+  add r15 r5 r6
+  add r15 r15 r7
+  div cSourcePipe cSourcePipe r15
+
+  # Compute the specific heat of the destination pipe (o2/n2/co2)
+  l r5 DestPipe RatioOxygenInput
+  l r6 DestPipe RatioNitrogenInput
+  l r7 DestPipe RatioCarbonDioxideInput
+  l r8 DestPipe TotalMolesInput
+  mul cDestPipe r5 OxygenSpecificHeat
+  mul r15 r6 NitrogenSpecificHeat
+  add cDestPipe cDestPipe r15
+  mul r15 r7 CarbonDioxideSpecificHeat
+  add cDestPipe cDestPipe r15
+  add r15 r5 r6
+  add r15 r15 r7
+  div cDestPipe cDestPipe r15
+  mul mDestPipe r8 r15
+
+  # Initialize Values
+  l r5 SourcePipe RatioPollutantOutput2
+  l r6 SourcePipe RatioLiquidPollutantOutput2
+  l r7 SourcePipe TemperatureOutput2
+  l r8 SourcePipe PressureOutput2
+  l r9 DestPipe TemperatureInput
+  l r10 VolumePump Maximum
+  add r11 r5 r6
+
+  # Compute the target temperature of the source pipe
+  move TargetTemperature WasteTemperature
+  bnan cSourcePipe flush
+  mul r15 r11 PollutantLatentHeat
+  div r15 r15 cSourcePipe
+  add TargetTemperature TargetTemperature r15
+
+  # Compute the target volume of the pump
+  sub r15 WasteTemperature r9
+  mul r15 r15 mDestPipe
+  mul r15 r15 cDestPipe
+  mul r15 r15 r7
+  mul r15 r15 IdealGasConstant
+  sub r14 r7 WasteTemperature
+  div r15 r15 r14
+  div r15 r15 cSourcePipe
+  div r15 r15 r8
+  max r15 r15 0
+  min r15 r15 r10
+
+flush:
+  sle r14 r7 TargetTemperature
+  select r13 r11 0 r14
+  select TargetVolume r14 r10 r15
+  seqz r12 TargetVolume
+
+  s PurgeValve On r12
+  s VolumePump On r13
+  s VolumePump Setting TargetVolume
+  
+  yield
+  j main
