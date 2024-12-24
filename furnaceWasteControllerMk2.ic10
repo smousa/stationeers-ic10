@@ -6,15 +6,10 @@ define WasteTemperatureMin 261.6
 define PollutantCondensationTemperature 425 # K
 define PollutantCondensationPressure 6000   # kPa
 
-# Structures
-define VolumePump HASH("StructureVolumePump")
-define PurgeValve HASH("StructurePurgeValve")
-
-# Networks
-define Out1 HASH("CombustiblePipeNetwork")
-
 # Devices
 alias SourcePipe db
+alias VolumePump d0
+alias PurgeValve d1
 
 main:
   # Check filter life
@@ -62,9 +57,9 @@ checkOutput:
   move r15 1
 
 flushOutput:
-  sbn VolumePump Out1 On r15
+  s VolumePump On r15
   snez r15 r13
-  sbn PurgeValve Out1 On r15
+  s PurgeValve On r15
 
 yield
 j main
