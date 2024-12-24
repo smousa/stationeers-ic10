@@ -1,0 +1,70 @@
+# Configuration
+define MaxPressure 51765.75
+define WasteTemperatureMin 261.6
+
+# Properties
+define PollutantCondensationTemperature 425 # K
+define PollutantCondensationPressure 6000   # kPa
+
+# Structures
+define VolumePump HASH("StructureVolumePump")
+define PurgeValve HASH("StructurePurgeValve")
+
+# Networks
+define Out1 HASH("CombustiblePipeNetwork")
+
+# Devices
+alias SourcePipe db
+
+main:
+  # Check filter life
+  move r15 0
+  ls r14 SourcePipe 0 Quantity
+  beqz r14 flushFiltration
+  ls r14 SourcePipe 1 Quantity
+  beqz r14 flushFiltration
+
+  # Check input pipe
+  l r14 SourcePipe PressureInput
+  beqz r14 flushFiltration
+  l r14 SourcePipe CombustionInput
+  bnez r14 flushFiltration
+
+  # Check output pipe
+  l r14 SourcePipe PressureOutput
+  bge r14 MaxPressure flushFiltration
+
+  # Check waste pipe
+  l r14 SourcePipe PressureOutput2
+  l r13 SourcePipe TemperatureOutput2
+  l r12 SourcePipe RatioPollutantOutput2
+  bge r14 MaxPressure flushFiltration
+  mul r11 r14 r12
+  bgt r11 PollutantCondensationPressure flushFiltration
+  move r15 1
+  ble r13 WasteTemperatureMin flushFiltration
+  bge r13 PollutantCondensationTemperature flushFiltration
+  j checkOutput
+
+flushFiltration:
+  s SourcePipe Mode r15
+
+checkOutput:
+  l r14 SourcePipe TemperatureOutput
+  l r13 SourcePipe RatioVolatilesOutput
+  l r12 SourcePipe RatioNitrousOxideOutput
+  l r11 SourcePipe RatioLiquidNitrousOxideOutput
+  move r15 0
+  beqz r14 flushOutput
+  bnez r13 flushOutput
+  bnez r12 flushOutput
+  bnez r11 flushOutput
+  move r15 1
+
+flushOutput:
+  sbn VolumePump Out1 On r15
+  snez r15 r13
+  sbn PurgeValve Out1 On r15
+
+yield
+j main
