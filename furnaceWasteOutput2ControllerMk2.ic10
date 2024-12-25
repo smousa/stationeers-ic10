@@ -81,7 +81,8 @@ main:
 
 flush:
   sle r14 r7 TargetTemperature
-  select r13 r11 0 r14
+  select r13 r11 0 r14 # Pump off if pollutant present
+  select r13 r8 r13 0  # Pump off if pipe empty
   select TargetVolume r14 r10 r15
   seqz r12 TargetVolume
 
