@@ -1,6 +1,7 @@
 # Configuration
 define MaxPressure 51765.75    # kPa
 define WasteTemperatureMin 293 # K
+define WastePressureMin 1000   # kPa
 
 # Structures
 define Filtration HASH("StructureFiltration")
@@ -15,16 +16,21 @@ define CarbonDioxideFilter HASH("CarbonDioxideFiltration")
 alias Source db
 
 main:
-  # Check Input Pipe Temperature
   l r15 Source TemperatureInput
-  bge r15 WasteTemperatureMin check
+  bge r15 WasteTemperatureMin checkPressure
   sb Filtration Mode 0
   beqz r15 done
   sb PipeHeater On 1
   j done
+
+checkPressure:
+  sb PipeHeater On 0
+  l r15 Source PressureInput
+  bge r15 WastePressureMin check
+  sb Filtration Mode 0
+  j done
   
 check:
-  sb PipeHeater On 0
   push OxygenFilter
   jal checkFilter
   push NitrogenFilter
