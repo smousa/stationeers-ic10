@@ -18,15 +18,15 @@ alias Source db
 main:
   l r15 Source PressureInput
   l r14 Source TemperatureInput
-  bge r15 WasteTemperatureMin checkPressure
+  bge r14 WasteTemperatureMin checkPressure
   sb Filtration Mode 0
-  beqz r14 done
+  beqz r15 done
   sb PipeHeater On 1
   j done
 
 checkPressure:
   sb PipeHeater On 0
-  bge r14 WastePressureMin check
+  bge r15 WastePressureMin check
   sb Filtration Mode 0
   j done
   
