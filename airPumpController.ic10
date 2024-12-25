@@ -1,6 +1,7 @@
 # Structures
 define GasSensor HASH("StructureVolumePump")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
+define VolumePump HASH("StructureVolumePump")
 
 # Networks
 define WastePipe HASH("WastePipeNetwork")
@@ -18,12 +19,12 @@ main:
 
   lbn r15 PipeAnalyzer OxygenPipe Pressure Maximum
   l r14 OxygenSetting Setting
-  slt r15 r14 r15
+  slt r15 r15 r14
   sbn VolumePump OxygenPipe On r15
 
   lbn r15 PipeAnalyzer NitrogenPipe Pressure Maximum
-  l r14 OxygenSetting Setting
-  slt r15 r14 r15
+  l r14 NitrogenSetting Setting
+  slt r15 r15 r14
   sbn VolumePump NitrogenPipe On r15
 
   yield
