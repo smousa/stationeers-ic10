@@ -48,8 +48,9 @@ main:
   lbn r14 PipeAnalyzer CoolantPipe On Minimum
   and r15 r15 r14
   bnez r15 recharge
-  sbn r15 DigitalValve CoolantPipe On 1
-  sbn r15 PipeAnalyzer CoolantPipe On 1
+  sbn DigitalValve CoolantPipe On 1
+  sbn PipeAnalyzer CoolantPipe On 1
+  sbn PurgeValve CoolantPipe On 0
   j checkPressure
 
 recharge:
@@ -58,16 +59,18 @@ recharge:
   mul r15 r15 CoolantPressure
   div r15 r15 IdealGasConstant
   div r15 r15 CoolantTemperature
-  blt r14 r15 checkPressure
+  slt r13 r14 r15
+  sbn PurgeValve CoolantPipe On r13
+  bnez r13 checkPressure
   s Recharge Open 0
   
 checkTemperature:
-  sbn PurgeValve CoolantPipe On 0
-  sbn PipeAnalyzer CoolantPipe On 0
   lb r15 GasSensor Temperature Maximum
   l r14 Thermostat Setting
   sgt r15 r15 r14
   sbn DigitalValve CoolantPipe On r15
+  sbn PipeAnalyzer CoolantPipe On 0
+  sbn PurgeValve CoolantPipe On 0
 
 checkPressure:
   l P PressureSetting Setting
