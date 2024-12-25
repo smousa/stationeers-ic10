@@ -1,0 +1,30 @@
+# Structures
+define GasSensor HASH("StructureVolumePump")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+
+# Networks
+define WastePipe HASH("WastePipeNetwork")
+define OxygenPipe HASH("OxygenPipeNetwork")
+define NitrogenPipe HASH("NitrogenPipeNetwork")
+
+# Inputs
+alias OxygenSetting d0
+alias NitrogenSetting d1
+
+main:
+  lbn r15 PipeAnalyzer WastePipe Pressure Maximum
+  sgtz r15 r15
+  sbn VolumePump WastePipe On r15
+
+  lbn r15 PipeAnalyzer OxygenPipe Pressure Maximum
+  l r14 OxygenSetting Setting
+  slt r15 r14 r15
+  sbn VolumePump OxygenPipe On r15
+
+  lbn r15 PipeAnalyzer NitrogenPipe Pressure Maximum
+  l r14 OxygenSetting Setting
+  slt r15 r14 r15
+  sbn VolumePump NitrogenPipe On r15
+
+  yield
+  j main
