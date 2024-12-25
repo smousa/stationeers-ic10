@@ -14,8 +14,9 @@ define IdealGasConstant 8.314 # J/(mol*K)
 define GasSensor HASH("StructureGasSensor")
 define ActiveVent HASH("StructureActiveVent")
 define DigitalValve HASH("StructureDigitalValve")
-define PipeAnalyzer HASH("StructurePipeAnalyzer")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define PurgeValve HASH("StructurePurgeValve")
+define VolumePump HASH("StructureVolumePump")
 
 # Networks
 define WastePipe HASH("WastePipeNetwork")
@@ -31,6 +32,7 @@ alias PressureSetting d1
 alias OxygenSetting d2
 alias NitrogenSetting d3
 alias CarbonDioxideSetting d4
+alias Recharge d5
 
 # Computed
 alias P r0
@@ -40,18 +42,28 @@ alias Ratio r3
 
 main:
   # Check coolant network
-  lbn r15 PurgeValve CoolantPipe On Maximum
+  l r15 Recharge Setting
   beqz r15 checkTemperature
-  sbn DigitalValve CoolantPipe On 1
+  lbn r15 DigitalValve CoolantPipe On Minimum
+  lbn r14 PipeAnalyzer CoolantPipe On Minimum
+  and r15 r15 r14
+  bnez r15 recharge
+  sbn r15 DigitalValve CoolantPipe On 1
+  sbn r15 PipeAnalyzer CoolantPipe On 1
+  j checkPressure
+
+recharge:
   lbn r15 PipeAnalyzer CoolantPipe Volume Sum
   lbn r14 PipeAnalyzer CoolantPipe TotalMoles Sum
   mul r15 r15 CoolantPressure
   div r15 r15 IdealGasConstant
   div r15 r15 CoolantTemperature
   blt r14 r15 checkPressure
-  sbn PurgeValve CoolantPipe On 0
-
+  s Recharge Open 0
+  
 checkTemperature:
+  sbn PurgeValve CoolantPipe On 0
+  sbn PipeAnalyzer CoolantPipe On 0
   lb r15 GasSensor Temperature Maximum
   l r14 Thermostat Setting
   sgt r15 r15 r14
