@@ -16,17 +16,17 @@ define CarbonDioxideFilter HASH("CarbonDioxideFiltration")
 alias Source db
 
 main:
-  l r15 Source TemperatureInput
+  l r15 Source PressureInput
+  l r14 Source TemperatureInput
   bge r15 WasteTemperatureMin checkPressure
   sb Filtration Mode 0
-  beqz r15 done
+  beqz r14 done
   sb PipeHeater On 1
   j done
 
 checkPressure:
   sb PipeHeater On 0
-  l r15 Source PressureInput
-  bge r15 WastePressureMin check
+  bge r14 WastePressureMin check
   sb Filtration Mode 0
   j done
   
