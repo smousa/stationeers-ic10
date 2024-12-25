@@ -1,3 +1,10 @@
+# Configuration
+define ToleranceMin 0.99
+define ToleranceMax 1.01
+
+define ModeOutward 0
+define ModeInward 1
+
 # Structures
 define GasSensor HASH("StructureGasSensor")
 define ActiveVent HASH("StructureActiveVent")
