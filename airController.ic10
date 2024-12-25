@@ -1,0 +1,74 @@
+# Structures
+define GasSensor HASH("StructureGasSensor")
+define ActiveVent HASH("StructureActiveVent")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+
+# Networks
+define WastePipe HASH("WastePipeNetwork")
+define OxygenPipe HASH("OxygenPipeNetwork")
+define NitrogenPipe HASH("NitrogenPipeNetwork")
+define CarbonDioxidePipe HASH("CarbonDioxidePipeNetwork")
+
+# Inputs
+alias PressureSetting d0
+alias OxygenSetting d1
+alias NitrogenSetting d2
+alias CarbonDioxideSetting d3
+
+# Computed
+alias P r0
+alias PressureMin r1
+alias PressureMax r2
+alias Ratio r3
+
+main:
+  l P PressureSetting Setting
+  mul PressureMin P ToleranceMin
+  mul PressureMax P ToleranceMax
+  lb r15 GasSensor Pressure Average
+  bge r15 PressureMax highPressure
+  ble r15 PressureMin lowPressure
+  sbn ActiveVent WastePipe On 0
+  j levels
+
+highPressure:
+  sbn ActiveVent WastePipe Mode ModeInward
+  sbn ActiveVent WastePipe PressureExternal PressureMin
+  sbn ActiveVent WastePipe On 1
+  j levels
+
+lowPressure:
+  sbn ActiveVent WastePipe Mode ModeOutward
+  sbn ActiveVent WastePipe PressureExternal PressureMax
+  sbn ActiveVent WastePipe On 1
+
+levels:
+  # Check O2 Levels
+  l Ratio OxygenSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioOxygen Average
+  slt r15 r15 Ratio
+  sbn ActiveVent OxygenPipe Mode ModeOutward
+  sbn ActiveVent OxygenPipe PressureExternal PressureMax
+  sbn ActiveVent OxygenPipe On r15
+
+  # Check N2 Levels
+  l Ratio NitrogenSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioNitrogen Average
+  slt r15 r15 Ratio
+  sbn ActiveVent NitrogenPipe Mode ModeOutward
+  sbn ActiveVent NitrogenPipe PressureExternal PressureMax
+  sbn ActiveVent NitrogenPipe On r15
+
+  # Check CO2 Levels
+  l Ratio CarbonDioxideSetting Setting
+  div Ratio Ratio 100
+  lb r15 GasSensor RatioCarbonDioxide Average
+  slt r15 r15 Ratio
+  sbn ActiveVent CarbonDioxidePipe Mode ModeOutward
+  sbn ActiveVent CarbonDioxidePipe PressureExternal PressureMax
+  sbn ActiveVent CarbonDioxidePipe On r15
+
+  yield
+  j main
