@@ -1,0 +1,129 @@
+# Configuration
+define MaxPressure 51765.75 # kPa
+define OutputTemperatureMin 277.2 # K
+define Output2TemperatureMin 291.5 # K
+
+# Properties
+define PollutantRatio 1.698
+define NitrousOxideRatio 0.558
+define IdealGasConstant 8.314
+define PollutantTemperature 425 # K
+define PollutantPressure 6000 # kPa
+define NitrousOxideTemperature 431 # K
+define NitrousOxidePressure 2000 # kPa
+
+# Structures
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+define DigitalValve HASH("StructureDigitalValve")
+
+# Networks
+define OutputPipe HASH("OutputPipeNetwork")
+define Output2Pipe HASH("Output2PipeNetwork")
+define OutputCoolingPipe HASH("OutputCoolingPipeNetwork")
+define Output2CoolingPipe HASH("Output2CoolingPipeNetwork")
+define OutputAtmosphere HASH("OutputAtmosphere")
+define Output2Atmosphere HASH("Output2Atmosphere")
+
+# Devices
+alias Source db
+alias VolumePump d0
+alias PurgeValve d1
+
+main:
+  move r15 0
+  # Check filter life
+  ls r0 Source 0 Quantity
+  ls r1 Source 1 Quantity
+  beqz r0 flushFiltration
+  beqz r1 flushFiltration
+  
+  # Check pipe pressure/combustion
+  l r0 Source PressureInput
+  l r1 Source CombustionInput
+  l r2 Source PressureOutput
+  l r3 Source PressureOutput2
+  beqz r0 flushFiltration
+  bnez r1 flushFiltration
+  bge r2 MaxPressure flushFiltration
+  bge r3 MaxPressure flushFiltration
+  
+  # Check for pollutant condensation
+  l r0 Source PressureOutput2
+  l r1 Source RatioPollutantOutput2
+  l r2 Source RatioLiquidPollutantOutput2
+  select r14 r0 r1 1 # P > 0 && Pol == 0
+  bgtz r2 flushFiltration
+  beqz r14 flushFiltration
+  
+  # Compute mols needed to force condensation
+  l r3 Source TotalMolesOutput2
+  l r4 Source VolumeOutput2
+  lbn r14 PipeAnalyzer Output2CoolingPipe TotalMoles Average
+  add r3 r3 r14
+  lbn r14 PipeAnalyzer Output2CoolingPipe Volume Average
+  add r4 r4 r14
+  mul r14 PollutantPressure r4
+  div r14 r14 IdealGasConstant
+  div r14 r14 PollutantTemperature
+  mul r13 r3 r1
+  bge r13 r14 flushFiltration
+  sub r14 r14 r13
+
+  # Ensure we have enough without overpressurizing
+  l r5 Source TotalMolesInput
+  l r6 Source RatioPollutantInput
+  l r7 Source TemperatureInput
+  div r14 r14 r5
+  div r14 r14 r6
+  bgt r14 1 flushFiltration
+  mul r14 r14 r5
+  add r14 r14 r3
+  mul r14 r14 IdealGasConstant
+  mul r14 r14 r7
+  div r14 r14 r4
+  bge r14 MaxPressure flushFiltration # Deadlock
+  move r15 1
+flushFiltration:
+  s Source Mode r15
+
+  # Output:
+  # Enable cooling when
+  # 1. Nitrous Oxide Gas present
+  # 2. Nitrous Oxide at Condensation pressure
+  # 1. Condensation Pressure AND
+  # 2. No volatiles present AND
+  # 3. Remaining pressure > 0
+  # Enable cooling at condensation pressure AND volatiles present
+  # Disable cooling at condensation min
+  # Turn on purge valve when volatiles are present
+  # Turn on pump when volatiles = 0 and n20 = 0 and ln20 = 0
+  l r0 Source PressureOutput
+  l r1 Source TemperatureOutput
+  l r2 Source RatioVolatilesOutput
+  l r3 Source RatioNitrousOxideOutput
+  l r4 Source RatioLiquidNitrousOxideOutput
+  mul r15 r0 r3
+  sgt r14 r1 OutputTemperatureMin
+  
+
+ 
+
+checkOutput:
+  l r14 SourcePipe TemperatureOutput
+  l r13 SourcePipe RatioVolatilesOutput
+  l r12 SourcePipe RatioNitrousOxideOutput
+  l r11 SourcePipe RatioLiquidNitrousOxideOutput
+  move r15 0
+  beqz r14 flushOutput
+  bnez r13 flushOutput
+  bnez r12 flushOutput
+  bnez r11 flushOutput
+  move r15 1
+
+flushOutput:
+  s VolumePump On r15
+  snez r15 r13
+  s PurgeValve On r15
+
+yield
+j main
