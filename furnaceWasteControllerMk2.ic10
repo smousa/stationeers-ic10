@@ -1,6 +1,6 @@
 # Configuration
 define MaxPressure 51765.75
-define WasteTemperatureMin 261.6
+define WasteTemperatureMin 277.2
 
 # Properties
 define PollutantCondensationTemperature 425 # K
