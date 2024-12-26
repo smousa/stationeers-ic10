@@ -3,7 +3,6 @@ define MaxPressure 51765.75
 define WasteTemperatureMin 291.5
 
 # Properties
-define IdealGasConstant 8.314
 define PollutantTemperature 425 # K
 define PollutantPressure 6000   # kPa
 
@@ -40,9 +39,10 @@ main:
   
   # Compute mols needed to force condensation
   l r3 Source TotalMolesOutput2
-  l r4 Source VolumeOutput2
-  mul r14 PollutantPressure r4
-  div r14 r14 IdealGasConstant
+  l r4 Source TemperatureOutput2
+  mul r14 r3 r4
+  div r14 r14 r0
+  mul r14 r14 PollutantPressure
   div r14 r14 PollutantTemperature
   mul r13 r3 r1
   slt r15 r13 r14
