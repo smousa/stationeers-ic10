@@ -3,52 +3,57 @@ define MaxPressure 51765.75
 define WasteTemperatureMin 291.5
 
 # Properties
-define PollutantCondensationTemperature 425 # K
-define PollutantCondensationPressure 6000   # kPa
+define IdealGasConstant 8.314
+define PollutantTemperature 425 # K
+define PollutantPressure 6000   # kPa
 
 # Devices
-alias SourcePipe db
+alias Source db
 alias VolumePump d0
 alias PurgeValve d1
 
 main:
+ move r15 0
   # Check filter life
-  move r15 0
-  ls r14 SourcePipe 0 Quantity
+  ls r0 Source 0 Quantity
+  ls r1 Source 1 Quantity
+  beqz r0 flushFiltration
+  beqz r1 flushFiltration
+  
+  # Check pipe pressure/combustion
+  l r0 Source PressureInput
+  l r1 Source CombustionInput
+  l r2 Source PressureOutput
+  l r3 Source PressureOutput2
+  beqz r0 flushFiltration
+  bnez r1 flushFiltration
+  bge r2 MaxPressure flushFiltration
+  bge r3 MaxPressure flushFiltration
+  
+  # Check for pollutant condensation
+  l r0 Source PressureOutput2
+  l r1 Source RatioPollutantOutput2
+  l r2 Source RatioLiquidPollutantOutput2
+  select r14 r0 r1 1 # P > 0 && Pol == 0
+  bgtz r2 flushFiltration
   beqz r14 flushFiltration
-  ls r14 SourcePipe 1 Quantity
-  beqz r14 flushFiltration
-
-  # Check input pipe
-  l r14 SourcePipe PressureInput
-  beqz r14 flushFiltration
-  l r14 SourcePipe CombustionInput
-  bnez r14 flushFiltration
-
-  # Check output pipe
-  l r14 SourcePipe PressureOutput
-  bge r14 MaxPressure flushFiltration
-
-  # Check waste pipe
-  l r14 SourcePipe PressureOutput2
-  l r13 SourcePipe TemperatureOutput2
-  l r12 SourcePipe RatioPollutantOutput2
-  bge r14 MaxPressure flushFiltration
-  mul r11 r14 r12
-  bgt r11 PollutantCondensationPressure flushFiltration
-  move r15 1
-  ble r13 WasteTemperatureMin flushFiltration
-  bge r13 PollutantCondensationTemperature flushFiltration
-  j checkOutput
-
+  
+  # Compute mols needed to force condensation
+  l r3 Source TotalMolesOutput2
+  l r4 Source VolumeOutput2
+  mul r14 PollutantPressure r4
+  div r14 r14 IdealGasConstant
+  div r14 r14 PollutantTemperature
+  mul r13 r3 r1
+  slt r15 r13 r14
 flushFiltration:
-  s SourcePipe Mode r15
+  s Source Mode r15
 
 checkOutput:
-  l r14 SourcePipe TemperatureOutput
-  l r13 SourcePipe RatioVolatilesOutput
-  l r12 SourcePipe RatioNitrousOxideOutput
-  l r11 SourcePipe RatioLiquidNitrousOxideOutput
+  l r14 Source TemperatureOutput
+  l r13 Source RatioVolatilesOutput
+  l r12 Source RatioNitrousOxideOutput
+  l r11 Source RatioLiquidNitrousOxideOutput
   move r15 0
   beqz r14 flushOutput
   bnez r13 flushOutput
