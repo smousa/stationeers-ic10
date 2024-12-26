@@ -36,6 +36,8 @@ main:
   select r14 r0 r1 1 # P > 0 && Pol == 0
   bgtz r2 flushFiltration
   beqz r14 flushFiltration
+  move r15 1
+  beqz r0 flushFiltration
   
   # Compute mols needed to force condensation
   l r3 Source TotalMolesOutput2
