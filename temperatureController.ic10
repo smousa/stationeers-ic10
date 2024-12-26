@@ -1,6 +1,6 @@
 # Properties
-define CoolantPressure 4800 # kPa
-define CoolantTemperature 425 # K
+define CoolantPressure 1440 # kPa
+define CoolantTemperature 173 # K
 define IdealGasConstant 8.314 # J/(mol*K)
 
 # Structures
