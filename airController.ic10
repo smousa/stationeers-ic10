@@ -41,13 +41,15 @@ main:
 highPressure:
   sbn ActiveVent WastePipe Mode ModeInward
   sbn ActiveVent WastePipe PressureExternal PressureMin
-  sbn ActiveVent WastePipe On 1
+  sgt r14 r15 P 
+  sbn ActiveVent WastePipe On r14
   j levels
 
 lowPressure:
   sbn ActiveVent WastePipe Mode ModeOutward
-  sbn ActiveVent WastePipe PressureExternal P
-  sbn ActiveVent WastePipe On 1
+  sbn ActiveVent WastePipe PressureExternal PressureMax
+  slt r14 r15 P
+  sbn ActiveVent WastePipe On r14
 
 levels:
   # Check O2 Levels
