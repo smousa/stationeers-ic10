@@ -46,7 +46,7 @@ highPressure:
 
 lowPressure:
   sbn ActiveVent WastePipe Mode ModeOutward
-  sbn ActiveVent WastePipe PressureExternal PressureMax
+  sbn ActiveVent WastePipe PressureExternal P
   sbn ActiveVent WastePipe On 1
 
 levels:
