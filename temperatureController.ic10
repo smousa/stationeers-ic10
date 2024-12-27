@@ -8,6 +8,7 @@ define GasSensor HASH("StructureGasSensor")
 define DigitalValve HASH("StructureDigitalValve")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define PurgeValve HASH("StructurePurgeValve")
+define VolumePump HASH("StructureVolumePump")
 
 # Networks
 define CoolantPipe HASH("CoolantPipeNetwork")
@@ -19,25 +20,27 @@ alias Recharge d1
 sbn PurgeValve CoolantPipe Lock 1
 
 main:
-  l r15 Recharge Setting
-  beqz r15 thermostat
+  l r0 Recharge Setting
+  beqz r0 thermostat
+
   sbn PipeAnalyzer CoolantPipe Lock 1
   sbn DigitalValve CoolantPipe Lock 1
+  sbn VolumePump CoolantPipe Lock 1
+  sbn PipeAnalyzer CoolantPipe On 1
+  sbn DigitalValve CoolantPipe On 0
+  sbn VolumePump CoolantPipe On 1
+  yield
 
-  lbn r15 DigitalValve CoolantPipe On Minimum
-  lbn r14 DigitalValve PipeAnalyzer On Minimum
-  and r15 r15 r14
-  beqzal r15 diagnostics
-
-recharge:
-  l r15 Recharge Setting
-  beqz r15 rechargeDone
-  lbn r15 PipeAnalyzer CoolantPipe Volume Sum
-  lbn r14 PipeAnalyzer CoolantPipe TotalMoles Sum
-  mul r15 r15 CoolantPressure
+  lbn r0 PipeAnalyzer CoolantPipe Volume Sum
+  mul r15 r0 CoolantPressure
   div r15 r15 IdealGasConstant
   div r15 r15 CoolantTemperature
-  bge r14 r15 rechargeDone
+
+recharge:
+  l r0 Recharge Setting
+  beqz r0 rechargeDone
+  lbn r1 PipeAnalyzer CoolantPipe TotalMoles Sum
+  bge r1 r15 rechargeDone 
   sbn PurgeValve CoolantPipe On 1
   yield
   j recharge
@@ -48,17 +51,14 @@ rechargeDone:
   sbn PipeAnalyzer CoolantPipe Lock 0
   sbn PipeAnalyzer CoolantPipe On 0
   sbn DigitalValve CoolantPipe Lock 0
+  sbn VolumePump CoolantPipe Lock 0
 
 thermostat:
   lb r15 GasSensor Temperature Average
   l r14 Thermostat Setting
   sgt r15 r15 r14
   sbn DigitalValve CoolantPipe On r15
+  seqz r15 r15
+  sbn DigitalValve VolumePump On r15
   yield
   j main
-  
-diagnostics:
-  sbn DigitalValve CoolantPipe On 1
-  sbn PipeAnalyzer CoolantPipe On 1
-  yield
-  j ra
