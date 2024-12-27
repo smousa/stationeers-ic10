@@ -34,7 +34,7 @@ main:
   l r1 Source RatioPollutantOutput2
   l r2 Source RatioLiquidPollutantOutput2
   select r14 r0 r1 1 # P > 0 && Pol == 0
-  bgt r2 r1 flushFiltration
+  bge r2 r1 flushFiltration
   beqz r14 flushFiltration
   move r15 1
   beqz r0 flushFiltration
