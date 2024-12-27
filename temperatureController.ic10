@@ -16,13 +16,13 @@ define CoolantPipe HASH("CoolantPipeNetwork")
 alias Thermostat d0
 alias Recharge d1
 
-sbn DigitalValve CoolantPipe Lock 1
 sbn PurgeValve CoolantPipe Lock 1
 
 main:
   l r15 Recharge Setting
   beqz r15 thermostat
   sbn PipeAnalyzer CoolantPipe Lock 1
+  sbn DigitalValve CoolantPipe Lock 1
 
   lbn r15 DigitalValve CoolantPipe On Minimum
   lbn r14 DigitalValve PipeAnalyzer On Minimum
@@ -47,6 +47,7 @@ rechargeDone:
   sbn PurgeValve CoolantPipe On 0
   sbn PipeAnalyzer CoolantPipe Lock 0
   sbn PipeAnalyzer CoolantPipe On 0
+  sbn DigitalValve CoolantPipe Lock 0
 
 thermostat:
   lb r15 GasSensor Temperature Average
