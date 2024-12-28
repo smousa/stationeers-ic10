@@ -40,7 +40,7 @@ recharge:
   l r0 Recharge Setting
   beqz r0 rechargeDone
   lbn r1 PipeAnalyzer CoolantPipe TotalMoles Sum
-  bge r1 r15 rechargeDone 
+  bge r1 r15 rechargeDone
   sbn PurgeValve CoolantPipe On 1
   yield
   j recharge
@@ -59,6 +59,6 @@ thermostat:
   sgt r15 r15 r14
   sbn DigitalValve CoolantPipe On r15
   seqz r15 r15
-  sbn DigitalValve VolumePump On r15
+  sbn VolumePump CoolantPipe On r15
   yield
   j main
