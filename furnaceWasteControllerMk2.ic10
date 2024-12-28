@@ -30,24 +30,21 @@ main:
   bge r3 MaxPressure flushFiltration
   
   # Check for pollutant condensation
-  l r0 Source PressureOutput2
-  l r1 Source RatioPollutantOutput2
-  l r2 Source RatioLiquidPollutantOutput2
-  select r14 r0 r1 1 # P > 0 && Pol == 0
-  bge r2 r1 flushFiltration
-  beqz r14 flushFiltration
+  l r4 Source RatioPollutantOutput2
+  l r5 Source RatioLiquidPollutantOutput2
+  bgt r5 r4 flushFiltration
   move r15 1
-  beqz r0 flushFiltration
-  
+  beqz r3 flushFiltration
+
   # Compute mols needed to force condensation
-  l r3 Source TotalMolesOutput2
-  l r4 Source TemperatureOutput2
-  mul r14 r3 r4
-  div r14 r14 r0
+  l r6 Source TotalMolesOutput2
+  l r7 Source TemperatureOutput2
+  mul r14 r6 r7
+  div r14 r14 r3
   mul r14 r14 PollutantPressure
   div r14 r14 PollutantTemperature
-  add r13 r1 r2
-  mul r13 r13 r3
+  add r13 r4 r5
+  mul r13 r13 r6
   slt r15 r13 r14
 flushFiltration:
   s Source Mode r15
