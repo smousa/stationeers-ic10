@@ -2,7 +2,6 @@
 define WasteTemperature 303
 
 # Properties
-define PollutantLatentHeat 2000                # J/mol
 define OxygenSpecificHeat 21.1                 # J/(K*mol)
 define NitrogenSpecificHeat 20.5               # J/(K*mol)
 define CarbonDioxideSpecificHeat 28.2          # J/(K*mol)
@@ -15,7 +14,6 @@ alias PurgeValve     d2
 alias VolumePump     d3
 
 # Globals
-alias TargetTemperature r0
 alias TargetVolume r1
 alias cSourcePipe r2
 alias cDestPipe r3
@@ -59,13 +57,6 @@ main:
   l r10 VolumePump Maximum
   add r11 r5 r6
 
-  # Compute the target temperature of the source pipe
-  move TargetTemperature WasteTemperature
-  bnan cSourcePipe flush
-  mul r15 r11 PollutantLatentHeat
-  div r15 r15 cSourcePipe
-  add TargetTemperature TargetTemperature r15
-
   # Compute the target volume of the pump
   sub r15 WasteTemperature r9
   mul r15 r15 mDestPipe
@@ -80,8 +71,7 @@ main:
   min r15 r15 r10
 
 flush:
-  sle r14 r7 TargetTemperature
-  select r13 r11 0 r14 # Pump off if pollutant present
+  seqz r13 r11 # Pump off if pollutant present
   select r13 r8 r13 0  # Pump off if pipe empty
   select TargetVolume r14 r10 r15
   sgt r12 r5 r6
