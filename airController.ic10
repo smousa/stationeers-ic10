@@ -26,7 +26,6 @@ alias CarbonDioxideSetting d3
 alias P r0
 alias PressureMin r1
 alias PressureMax r2
-alias Ratio r3
 
 main:
   l P PressureSetting Setting
@@ -53,31 +52,35 @@ lowPressure:
 
 levels:
   # Check O2 Levels
-  l Ratio OxygenSetting Setting
-  div Ratio Ratio 100
-  lb r15 GasSensor RatioOxygen Average
-  slt r15 r15 Ratio
-  sbn ActiveVent OxygenPipe Mode ModeOutward
-  sbn ActiveVent OxygenPipe PressureExternal PressureMax
-  sbn ActiveVent OxygenPipe On r15
+  push OxygenPipe
+  push LogicType.RatioOxygen
+  push 1
+  jal level
 
   # Check N2 Levels
-  l Ratio NitrogenSetting Setting
-  div Ratio Ratio 100
-  lb r15 GasSensor RatioNitrogen Average
-  slt r15 r15 Ratio
-  sbn ActiveVent NitrogenPipe Mode ModeOutward
-  sbn ActiveVent NitrogenPipe PressureExternal PressureMax
-  sbn ActiveVent NitrogenPipe On r15
+  push NitrogenPipe
+  push LogicType.RatioNitrogen
+  push 2
+  jal level
 
   # Check CO2 Levels
-  l Ratio CarbonDioxideSetting Setting
-  div Ratio Ratio 100
-  lb r15 GasSensor RatioCarbonDioxide Average
-  slt r15 r15 Ratio
-  sbn ActiveVent CarbonDioxidePipe Mode ModeOutward
-  sbn ActiveVent CarbonDioxidePipe PressureExternal PressureMax
-  sbn ActiveVent CarbonDioxidePipe On r15
+  push CarbonDioxidePipe
+  push LogicType.RatioCarbonDioxide
+  push 3
+  jal level
 
   yield
-  j main
+  j main 
+
+level:
+  pop r15
+  l dr15 r15 Setting
+  div r15 r15 100
+  pop r14 
+  lb r14 GasSensor r14 Average
+  slt r14 r14 r15
+  pop r13
+  sbn ActiveVent r13 Mode ModeOutward
+  sbn ActiveVent r13 PressureExternal PressureMax
+  sbn ActiveVent r13 On r14
+  j ra
