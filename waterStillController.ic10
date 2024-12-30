@@ -1,0 +1,74 @@
+# Configuration
+define MaxStacks 1843
+define MaxStackSize 50
+define LiquidMolesPerLiter 55.6
+define LiquidMolesPerUnit 20
+define GasMolesPerUnit 5
+define StillMaxPressure 15.3 # kPa
+define GasMaxPressure 51675 # kPa
+define LiquidMaxVolumeTolerance .85
+define MinTemperature 293.15 # K
+define MaxTemperature 303.15 # K
+define IdealGasConstant 8.314
+
+# Structures
+define DaylightSensor HASH("StructureDaylightSensor")
+define GasSensor HASH("StructureGasSensor")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+define ActiveVent HASH("StructureActiveVent")
+define VolumePump HASH("StructureVolumePump")
+define LiquidVolumePump HASH("StructureLiquidVolumePump")
+define Stacker HASH("StructureStacker")
+define LiquidTank HASH("StructureLiquidTankBigInsulated")
+define GasTank HASH("StructureTankSmallInsulated")
+
+# Networks
+define Still HASH("WaterStillNetwork")
+
+main:
+  lbn r0 Stacker Still ExportCount Sum
+  beqz r0 reset
+  bge r0 MaxStacks drain
+  j monitor
+
+reset:
+  lbn r0 LiquidTank Still VolumeOfLiquid Sum
+  lbn r1 LiquidTank Still Volume Sum
+  mul r1 r1 LiquidMaxVolumeTolerance
+  sub r15 r1 r0
+  mul r15 r15 LiquidMolesPerLiter
+  div r15 r15 LiquidMolesPerUnit
+  lbn r0 GasTank Still Volume Sum
+  lbn r1 GasTank Still TotalMoles Sum
+  mul r14 r0 GasMaxPressure
+  div r14 r14 IdealGasConstant
+  div r14 r14 MaxTemperature
+  div r14 r14 GasMolesPerUnit
+  min r15 r15 r14
+  div r15 r15 MaxStacks
+  min r15 r15 MaxStackSize
+  floor r15 r15
+  blez r15 monitor
+  sbn Stacker Still Setting r15
+  s db Setting 1
+  j monitor
+
+drain:
+  s db Setting 0
+  lb r0 DaylightSensor SolarIrradiance Average
+  lbn r1 GasSensor Still Pressure Average
+  lbn r2 GasSensor Still RatioWater Average
+  beqz r0 monitor
+  bnez r1 monitor
+  bnez r2 monitor
+  sbn Stacker Still ClearMemory 1
+  j done
+
+monitor:
+  lbn r3 GasSensor Still Temperature
+  sbn ActiveVent Still Mode 1 # Inward
+  sbn ActiveVent Still PressureExternal StillMaxPressure
+  
+done:
+  yield
+  j main
