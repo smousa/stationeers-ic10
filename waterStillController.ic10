@@ -53,45 +53,33 @@ main:
   j done
 
 monitor:
-  slt r15 r0 MaxStacks
-  s db Setting r15
-  bnez r15 monitorGas
-  
-  lb r1 DaylightSensor SolarIrradiance Average
-  lbn r2 GasSensor RatioWater Maximum
-  lbn r3 GasSensor RatioPollutedWater Maximum
-  beqz r1 monitorGas
-  bnez r2 monitorGas
-  bnez r3 monitorGas
-  sbn r0 Stacker Still ClearMemory 1
-  j done
+  s db Setting 0
 
-monitorGas:
-  lbn r0 PipeAnalyzer Still RatioNitrogen Average
-  lbn r1 PipeAnalyzer Still TotalMoles Average
-  lbn r2 PipeAnalyzer Still Temperature Average
-  lbn r3 PipeAnalyzer Still Pressure Average
-  lbn r3 GasTank Still TotalMoles Sum
-  lbn r4 GasTank Still Temperature Average
-  lbn r5 VolumePump Still Maximum Average
-  lbn r6 VolumePump Still Maximum Sum
+  lbn r1 PipeAnalyzer Still RatioNitrogen Average
+  lbn r2 PipeAnalyzer Still TotalMoles Average
+  lbn r3 PipeAnalyzer Still Temperature Average
+  lbn r4 PipeAnalyzer Still Pressure Average
+  lbn r5 GasTank Still TotalMoles Sum
+  lbn r6 GasTank Still Temperature Average
+  lbn r7 VolumePump Still Maximum Average
+  lbn r8 VolumePump Still Maximum Sum
 
-  blt r0 1 monitorLiquid
+  blt r1 1 monitorLiquid
 
   # Compute the target volume of the pump
-  sub r15 TargetTemperature r4
+  sub r15 TargetTemperature r5
+  mul r15 r15 r4
   mul r15 r15 r3
-  mul r15 r15 r2
   mul r15 r15 IdealGasConstant
-  sub r14 r2 TargetTemperature
+  sub r14 r3 TargetTemperature
   div r15 r15 r14
-  div r15 r15 r3
+  div r15 r15 r4
   max r15 r15 0
-  min r15 r15 r6
-  sle r14 r2 TargetTemperature
-  select r15 r14 r6 r15
-  mul r15 r15 r5
-  div r15 r15 r6
+  min r15 r15 r7
+  sle r14 r3 TargetTemperature
+  select r15 r14 r7 r15
+  mul r15 r15 r6
+  div r15 r15 r7
   snez r14 r15
 
   sbn ActiveVent Still On 0
@@ -100,19 +88,29 @@ monitorGas:
   j done
 
 monitorLiquid:
-  lbn r0 GasSensor Still RatioNitrogen Average
-  lbn r1 GasSensor Still RatioPollutedWater Average
-  lbn r2 GasSensor Still Temperature Average
-  add r15 r0 r1
+  lbn r1 DaylightSensor SolarIrradiance Average
+  lbn r2 GasSensor Still RatioNitrogen Average
+  lbn r3 GasSensor Still RatioPollutedWater Average
+  lbn r4 GasSensor Still RatioWater Average 
+  lbn r5 GasSensor Still Temperature Average
+
+  slt r15 r0 MaxStacks
+  select r15 r1 r15 1
+  select r15 r2 1 r15 
+  select r15 r3 1 r15 # Boil
   select r14 r15 MaxStillPressure MinStillPressure
   sbn ActiveVent Still PressureExternal r14
-  sgt r13 r2 TargetTemperature
-  sbn ActiveVentStill On r13
-  snez r12 r15
-  select r12 r13 1 r12
+  sgt r14 r5 TargetTemperature # Hot
+  or r13 r15 r14
+  sbn ActiveVent Still On r13
+  seqz r13 r4 # Empty 
+  or r12 r15 r14 
+  or r12 r12 r13
+  seqz r12 r12
   sbn LiquidDigitalValve Still On r12
-  sbn VolumePump Still On 0
-  
+  select r12 r15 0 r13
+  sbn Stacker Still ClearMemory r12
+
 done:
   yield
   j main
