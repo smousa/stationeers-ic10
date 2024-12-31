@@ -90,7 +90,6 @@ monitor:
 drain:
   lbn r0 GasSensor Still RatioWater Average
   lbn r1 GasSensor Still Temperature Average
-  beqz r0 done
 
   sbn VolumePump Still On 0
   sbn ActiveVent Still PressureExternal 0
