@@ -3,8 +3,7 @@ define MaxPressure 51765.75
 define WasteTemperatureMin 291.5
 
 # Properties
-define PollutantTemperature 425 # K
-define PollutantPressure 6000   # kPa
+define CondensationPressure 6000 # kPa
 
 # Devices
 alias Source db
@@ -28,24 +27,17 @@ main:
   bnez r1 flushFiltration
   bge r2 MaxPressure flushFiltration
   bge r3 MaxPressure flushFiltration
-  
-  # Check for pollutant condensation
+
+  # Turn on if partial pressure is less than condensation pressure
   l r4 Source RatioPollutantOutput2
   l r5 Source RatioLiquidPollutantOutput2
-  bgt r5 r4 flushFiltration
-  move r15 1
-  beqz r3 flushFiltration
+  add r14 r4 r5
+  sub r13 1 r14
+  mul r13 r13 r3
+  slt r13 r13 CondensationPressure
+  select r15 r14 r13 0
+  select r15 r3 r15 1
 
-  # Compute mols needed to force condensation
-  l r6 Source TotalMolesOutput2
-  l r7 Source TemperatureOutput2
-  mul r14 r6 r7
-  div r14 r14 r3
-  mul r14 r14 PollutantPressure
-  div r14 r14 PollutantTemperature
-  add r13 r4 r5
-  mul r13 r13 r6
-  slt r15 r13 r14
 flushFiltration:
   s Source Mode r15
 
