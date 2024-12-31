@@ -63,9 +63,8 @@ monitor:
   lbn r1 GasSensor Still RatioPollutedWater Maximum 
   add r13 r0 r1
   snez r13 r13 # isDirty
-
-  and r12 r15 r14 
-  seqz r12 r12
+ 
+  seqz r12 r14
   or r12 r12 r13 # isBoil
 
   lbn r0 GasSensor Still Temperature Average
