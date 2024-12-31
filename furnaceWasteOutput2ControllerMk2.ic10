@@ -14,7 +14,6 @@ alias PurgeValve     d2
 alias VolumePump     d3
 
 # Globals
-alias TargetVolume r1
 alias cSourcePipe r2
 alias cDestPipe r3
 alias mDestPipe r4
@@ -70,16 +69,21 @@ main:
   max r15 r15 0
   min r15 r15 r10
 
-flush:
-  seqz r13 r11 # Pump off if pollutant present
-  select r13 r8 r13 0  # Pump off if pipe empty
-  select TargetVolume r14 r10 r15
-  sgt r12 r5 r6
-  select r12 TargetVolume r12 1
-  
-  s PurgeValve On r12
-  s VolumePump On r13
-  s VolumePump Setting TargetVolume
+  # Use setting if SourcePipe.Temperature > WasteTemperature
+  # Otherwise, use SourcePipe.VolumePump.Maximum
+  sgtz r14 r14
+  select r15 r14 r15 r10
+  s VolumePump Setting r15
+
+  # Turn on pump if SourcePipe.Pollutant == 0 && SourcePipe.Pressure > 0 
+  seqz r14 r11
+  select r14 r8 r14 0
+  s VolumePump On r14
+
+  # Turn on purge valve if SourcePipe.VolumePump.Setting == 0 || SourcePipe.Pressure == 0
+  seqz r13 r15
+  select r13 r8 r13 1
+  s PurgeValve On r13
   
   yield
   j main
