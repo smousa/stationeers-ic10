@@ -1,66 +1,38 @@
 # Configuration
-define MaxCapacity 0.85
-define MaxStacks 1740       # 2048 * 0.85
+define MaxStacks 1740          # 2048 * 0.85
 define MaxStackSize 50
-define MaxPressure 51675.75 # 60795 kPa * 0.85
-
 define MinPressure  15.3       # kPa
+define MaxPressure 51675.75    # 60795 kPa * 0.85
 define MaxStillPressure 100    # kPa
 define MaxStillTemperature 373 # K
-
+define TargetTemperature 303   # K
 define LiquidMolesPerLiter 55.6
 define LiquidMolesPerUnit 20
 define GasMolesPerUnit 5
-define TargetTemperature 303 # K
-
-define IdealGasConstant 8.314
-
 define Inward 0
 define Outward 1
-
+define IdealGasConstant 8.314
 # Structures
-define DaylightSensor HASH("StructureDaylightSensor")
-define GasSensor HASH("StructureGasSensor")
-define PipeAnalyzer HASH("StructurePipeAnalysizer")
-define ActiveVent HASH("StructureActiveVent")
-define VolumePump HASH("StructureTurboVolumePump")
+define DaylightSensor     HASH("StructureDaylightSensor")
+define GasSensor          HASH("StructureGasSensor")
+define PipeAnalyzer       HASH("StructurePipeAnalysizer")
+define ActiveVent         HASH("StructureActiveVent")           
+define VolumePump         HASH("StructureTurboVolumePump")
 define LiquidDigitalValve HASH("StructureLiquidDigitalValve")
-define Stacker HASH("StructureStacker")
-define LiquidTank HASH("StructureLiquidTankBigInsulated")
-define GasTank HASH("StructureTankSmallInsulated")
-
+define Stacker            HASH("StructureStacker")
+define LiquidTank         HASH("StructureLiquidTankBigInsulated")
+define GasTank            HASH("StructureTankSmallInsulated")
 # Networks
 define Still HASH("WaterStillNetwork")
 
-# Outputs
-alias DrillPercent d0
-alias DistillPercent d1
-alias FillPercent d2
-alias GasFillPercent d3
-
 main:
-  lbn r0 Stacker Still ExportCount Sum
-  bnez r0 monitor
-
-  lbn r1 LiquidTank Still VolumeOfLiquid Sum
-  lbn r2 LiquidTank Still Volume Sum
-  mul r2 r2 MaxCapacity
-  sub r15 r2 r1
-  mul r15 r15 LiquidMolesPerLiter
-  div r15 r15 LiquidMolesPerUnit
-  lbn r1 GasTank Still Volume Sum
-  lbn r2 GasTank Still TotalMoles Sum
-  mul r14 r1 MaxPressure
-  div r14 r14 IdealGasConstant
-  div r14 r14 TargetTemperature
-  div r14 r14 GasMolesPerUnit
-  min r15 r15 r14
-  div r15 r15 MaxStacks
-  min r15 r15 MaxStackSize
-  ceil r15 r15
-  blez r15 done
-  s db Setting 1 # Turn on the miner
-  sbn Stacker Still Setting r15
+  l r0 db Setting
+  lbn r1 Stacker Still ExportCount Sum
+  slt r15 r1 MaxStacks
+  and r0 r0 r15
+  s db Setting r0
+  bnez r1 monitor
+  s db Setting 1 # Turn on miner
   j done
 
 monitor:
@@ -68,36 +40,30 @@ monitor:
   lbn r1 GasSensor Still RatioSteam Average
   lbn r2 GasSensor Still RatioWater Average
   add r15 r1 r2
-  select r15 r2 r15 0 # Assume there will always be steam
   blt r15 1 boil
-
-  # And if the pipe is clean too
+  # And if the pipe is dirty too
   lbn r3 PipeAnalyzer Still TotalMoles Average
   lbn r4 PipeAnalyzer Still RatioSteam Average
   lbn r5 PipeAnalyzer Still RatioWater Average
   add r15 r4 r5
   select r15 r6 r15 1
   blt r15 1 boil
-
-  # We need to know that the miner won't turn on
-  l r6 db Setting
-  lb r7 DaylightSensor SolarIrradiance Average
-  beqz r6 drain
-  bge r0 MaxStacks drain
-  beqz r7 boil
+  # Ensure that the miner won't turn on
+  lb r6 DaylightSensor SolarIrradiance Average
+  beqz r0 drain
+  beqz r6 boil
   s db Setting 0 # Turn off the miner
 
 drain:
-  lbn r0 GasSensor Still RatioWater Average
-  lbn r1 GasSensor Still Temperature Average
-
+  lbn r3 GasSensor Still Temperature Average
   sbn VolumePump Still On 0
   sbn ActiveVent Still PressureExternal 0
-  sgt r15 r1 TargetTemperature
+  sgt r15 r3 TargetTemperature
   sbn ActiveVent Still On r15
-  seqz r15 r15
+  sgtz r14 r2
+  select r13 r15 0 r14
   sbn LiquidDigitalValve Still On r15
-  seqz r15 r0
+  seqz r12 r14
   sbn Stacker Still ClearMemory r15
   j done
 
@@ -112,17 +78,12 @@ boil:
   lbn r7 GasTank Still Temperature Average
   lbn r8 GasTank Still Volume Sum
   lbn r9 GasTank Still TotalMoles Sum
-
   lbn r10 VolumePump Still Maximum Sum
   lbn r11 VolumePump Still Maximum Average
-  
   # Turn on the vent if the water is boiling
   sbn ActiveVent Still PressureExternal MaxStillPressure
   sgt r15 r0 MaxStillTemperature
   sbn ActiveVent Still On r15
-
-  # TODO: compute minimum stacks to filter all of the nitrogen
-
   # Compute the inward pump volume
   mul r15 r1 MinPipePressure
   div r15 r15 TargetTemperature
@@ -132,7 +93,6 @@ boil:
   div r15 r15 r6
   max r15 r15 0
   min r15 r15 r10
-
   # Compute the outward pump volume
   sub r14 TargetTemperature r7
   mul r14 r14 r9
@@ -145,7 +105,6 @@ boil:
   min r14 r14 r10
   sgtz r13 r13
   select r14 r13 r14 r10 
-
   # Assign Pump State
   slt r13 r5 1
   select r12 r13 Inward Outward
@@ -156,7 +115,7 @@ boil:
   sbn VolumePump Still Setting r12
   sle r12 r0 MaxStillTemperature
   sbn VolumePump Still On r12
-  
+
 done:
   yield
   j main
