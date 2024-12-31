@@ -27,6 +27,10 @@ define GasTank HASH("StructureTankSmallInsulated")
 # Networks
 define Still HASH("WaterStillNetwork")
 
+# Outputs
+alias FillPercent d0
+alias DistillPercent d1
+
 main:
   lbn r0 Stacker Still ExportCount Sum
   bnez r0 monitor
@@ -52,18 +56,20 @@ main:
 
 monitor:
   sge r15 r0 MaxStacks # isFull
+  div r15 r0 MaxStacks
+  s FillPercent Setting r15
 
   seqz r14 r15
   s db Setting r14
-
   lb r1 DaylightSensor SolarIrradiance Average
   snez r14 r1 # isDaytime
 
-  lbn r0 GasSensor Still RatioNitrogen Maximum
-  lbn r1 GasSensor Still RatioPollutedWater Maximum 
+  lbn r0 GasSensor Still RatioWater Average
+  lbn r1 GasSensor Still RatioSteam Average
   add r13 r0 r1
-  snez r13 r13 # isDirty
- 
+  s DistillPercent Setting r13
+  slt r13 r13 1 # isDirty
+
   seqz r12 r14
   or r12 r12 r13 # isBoil
 
