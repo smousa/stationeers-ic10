@@ -92,6 +92,7 @@ drain:
   lbn r1 GasSensor Still Temperature Average
   beqz r0 done
 
+  sbn VolumePump Still On 0
   sbn ActiveVent Still PressureExternal 0
   sgt r15 r1 TargetTemperature
   sbn ActiveVent Still On r15
