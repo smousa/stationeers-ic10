@@ -34,9 +34,7 @@ main:
   add r14 r4 r5
   sub r13 1 r14
   mul r13 r13 r3
-  slt r13 r13 CondensationPressure
-  select r15 r14 r13 0
-  select r15 r3 r15 1
+  slt r15 r13 CondensationPressure
 
 flushFiltration:
   s Source Mode r15
