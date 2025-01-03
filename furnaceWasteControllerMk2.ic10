@@ -11,7 +11,7 @@ alias VolumePump d0
 alias PurgeValve d1
 
 main:
- move r15 0
+  move r15 0
   # Check filter life
   ls r0 Source 0 Quantity
   ls r1 Source 1 Quantity
