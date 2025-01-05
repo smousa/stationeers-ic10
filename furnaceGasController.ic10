@@ -1,0 +1,123 @@
+# Structures
+define GasMixer HASH("StructureGasMixer")
+define DigitalValve HASH("StructureDigitalValve")
+# Constants
+define Enthalpy 572000
+define V 1000
+define IdealGasConstant 8.314
+# Inputs/Outputs
+alias Furnace d0
+alias PipeAnalyzer d1
+alias PressureRegulator d2
+alias P d3 # Target Pressure
+alias T d4 # Target Temperature
+alias M2 d5 # Fuel Enthalpy Multiplier^2 (4 - HydroNitrox or 9 - HydrOx)
+# Initialize Specific Heat Table
+move sp 0
+define SpecificHeatStart 0
+define SpecificHeatSize 6
+push LogicType.RatioOxygen
+push 21.1 # OxygenSpecificHeat
+push LogicType.RatioNitrogen
+push 20.6 # NitrogenSpecificHeat
+push LogicType.RatioCarbonDioxide
+push 28.2 # CarbonDioxideSpecificHeat
+push LogicType.RatioPollutant
+push 24.8 # PollutantSpecificHeat
+push LogicType.RatioNitrousOxide
+push 37.2 # NitrousOxideSpecificHeat
+push LogicType.VolatilesSpecificHeat
+push 20.4 # VolatilesSpecificHeat
+alias Activated r0
+alias TargetMoles r1
+alias FurnaceTotalMoles r2
+alias FurnaceTemperature r3
+alias FurnaceSpecificHeat r4
+alias PressurantTargetMoles r5
+alias PressurantSpecificHeat r6
+alias PressurantTemperature r7
+main:
+  # Wait for ready signal
+  l r15 db Setting
+  bnez r15 activate
+  sb PipeGasMixer On 0
+  sb DigitalValve On 0
+  sb PressureRegulator On 1
+  j done
+activate:
+  sb PressureRegulator On 0
+  # Calculate specific heat of furnace
+  push 0
+  jal callGetSpecificHeat
+  pop FurnaceSpecificHeat
+  pop FurnaceTemperature
+  pop FurnaceTotalMoles
+  # Calculate specific heat of pressurant pipe
+  push 1
+  jal callGetSpecificHeat
+  pop PressurantSpecificHeat
+  pop PressurantTemperature
+  pop PressurantTargetMoles
+  # Load Settings
+  l r8 P Setting
+  l r9 T Setting
+  l r10 M2 Setting
+  # Calculate target moles
+  mul TargetMoles r8 V
+  div TargetMoles TargetMoles IdealGasConstant
+  div TargetMoles TargetMoles r9
+  # If furnace moles are too high, turn on the valve
+  sgt r15 FurnaceTotalMoles TargetMoles
+  sb DigitalValve On r15
+  # Calculate target moles of pressurant
+  mul PressurantTargetMoles Enthalpy TargetMoles
+  mul r15 Enthalpy FurnaceTotalMoles
+  sub PressurantTargetMoles PressurantTargetMoles r15
+  mul r15 r10 FurnaceTotalMoles
+  mul r15 r15 FurnaceSpecificHeat
+  sub r14 r9 FurnaceTemperature
+  mul r15 r15 r14
+  sub PressurantTargetMoles PressurantTargetMoles r15
+  mul r15 r10 PressurantSpecificHeat
+  sub r14 r9 PressurantTemperature
+  mul r15 r15 r14
+  add r15 r15 Enthalpy
+  div PressurantTargetMoles PressurantTargetMoles r15
+  sgtz r15 PressurantTargetMoles
+  sb GasMixer On r15
+  # Calculate the target mixture ratio
+  sub r15 TargetMoles FurnaceTotalMoles
+  sub r15 r15 PressurantTargetMoles
+  max r15 r15 0
+  sqrt r14 r10
+  div r15 r15 r4
+  add r15 r15 PressurantTargetMoles
+  div r15 PressurantTargetMoles r15
+  sb GasMixer Setting r15
+  s Furnace Activate 1
+done:
+  yield
+  j main
+callGetSpecificHeat:
+  pop r15 # Device
+  l r14 dr15 TotalMoles
+  l r13 dr15 Temperature
+  move r12 0 # Specific Heat
+  beqz r14 returnGetSpecificHeat
+  move r11 0 # Loop Iterator
+loopGetSpecificHeat:
+  add r10 r0 r11
+  get r9 db r10 # Logic Type
+  l r9 dr15 r9
+  add r10 r10 1
+  get r8 db r10 # Specific Heat
+  mul r9 r9 r8
+  add r12 r12 r9
+  add r11 r11 1
+  blt r11 SpecificHeatSize loopGetSpecificHeat 
+returnGetSpecificHeat:
+  push r15
+  push r14
+  push r13 
+  push r12
+  j ra  
