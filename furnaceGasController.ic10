@@ -1,6 +1,7 @@
 # Structures
 define GasMixer HASH("StructureGasMixer")
 define BackPressureRegulator HASH("StructureBackPressureRegulator")
+define PressureRegulator HASH("StructurePressureRegulator")
 # Constants
 define Enthalpy 572000
 define V 1000
@@ -8,10 +9,9 @@ define IdealGasConstant 8.314
 # Inputs/Outputs
 alias Furnace d0
 alias PipeAnalyzer d1
-alias PressureRegulator d2
-alias P d3 # Target Pressure
-alias T d4 # Target Temperature
-alias M2 d5 # Fuel Enthalpy Multiplier^2 (4 - HydroNitrox or 9 - HydrOx)
+alias P d2 # Target Pressure
+alias T d3 # Target Temperature
+alias M2 d4 # Fuel Enthalpy Multiplier^2 (4 - HydroNitrox or 9 - HydrOx)
 # Initialize Specific Heat Table
 move sp 0
 define SpecificHeatStart 0
@@ -41,7 +41,7 @@ main:
   bnez r15 activate
   sb GasMixer On 0
   sb BackPressureRegulator On 0
-  s PressureRegulator On 1
+  sb PressureRegulator On 1
   j done
 activate:
   sb BackPressureRegulator On 1
@@ -67,8 +67,7 @@ activate:
   div TargetMoles TargetMoles r9
   # If furnace moles are too high, turn on the valve
   sgt r15 FurnaceTotalMoles TargetMoles
-  s PressureRegulator On r15
-  sb BackPressureRegulator Setting r8
+  sb PressureRegulator On r15
   # Calculate target moles of pressurant
   mul PressurantTargetMoles Enthalpy TargetMoles
   mul r15 Enthalpy FurnaceTotalMoles
