@@ -117,7 +117,6 @@ loopGetSpecificHeat:
   add r11 r11 1
   blt r11 SpecificHeatSize loopGetSpecificHeat 
 returnGetSpecificHeat:
-  push r15
   push r14
   push r13 
   push r12
