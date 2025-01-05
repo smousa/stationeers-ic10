@@ -1,6 +1,6 @@
 # Structures
 define GasMixer HASH("StructureGasMixer")
-define DigitalValve HASH("StructureDigitalValve")
+define BackPressureRegulator HASH("StructureBackPressureRegulator")
 # Constants
 define Enthalpy 572000
 define V 1000
@@ -37,15 +37,14 @@ alias PressurantTargetMoles r5
 alias PressurantSpecificHeat r6
 alias PressurantTemperature r7
 main:
-  # Wait for ready signal
   l r15 db Setting
   bnez r15 activate
   sb PipeGasMixer On 0
-  sb DigitalValve On 0
-  sb PressureRegulator On 1
+  sb BackPressureRegulator On 0
+  s PressureRegulator On 1
   j done
 activate:
-  sb PressureRegulator On 0
+  sb BackPressureRegulator On 1
   # Calculate specific heat of furnace
   push 0
   jal callGetSpecificHeat
@@ -68,7 +67,8 @@ activate:
   div TargetMoles TargetMoles r9
   # If furnace moles are too high, turn on the valve
   sgt r15 FurnaceTotalMoles TargetMoles
-  sb DigitalValve On r15
+  s PressureRegulator On r15
+  sb BackPressureRegulator Setting r8
   # Calculate target moles of pressurant
   mul PressurantTargetMoles Enthalpy TargetMoles
   mul r15 Enthalpy FurnaceTotalMoles
