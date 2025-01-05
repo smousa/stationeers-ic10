@@ -41,9 +41,7 @@ main:
   bnez r15 activate
   sb GasMixer On 0
   sb BackPressureRegulator On 0
-  l r15 Furnace Pressure
-  sgtz r15 r15
-  sb PressureRegulator On r15
+  sb PressureRegulator On 0
   j done
 activate:
   sb BackPressureRegulator On 1
@@ -120,4 +118,4 @@ returnGetSpecificHeat:
   push r14
   push r13 
   push r12
-  j ra  
+  j ra
