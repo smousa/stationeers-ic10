@@ -41,7 +41,9 @@ main:
   bnez r15 activate
   sb GasMixer On 0
   sb BackPressureRegulator On 0
-  sb PressureRegulator On 1
+  l r15 Furnace Pressure
+  sgtz r15 r15
+  sb PressureRegulator On r15
   j done
 activate:
   sb BackPressureRegulator On 1
