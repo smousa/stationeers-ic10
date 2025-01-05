@@ -28,7 +28,7 @@ push LogicType.RatioNitrousOxide
 push 37.2 # NitrousOxideSpecificHeat
 push LogicType.VolatilesSpecificHeat
 push 20.4 # VolatilesSpecificHeat
-alias Activated r0
+# Global Variables
 alias TargetMoles r1
 alias FurnaceTotalMoles r2
 alias FurnaceTemperature r3
@@ -39,7 +39,7 @@ alias PressurantTemperature r7
 main:
   l r15 db Setting
   bnez r15 activate
-  sb PipeGasMixer On 0
+  sb GasMixer On 0
   sb BackPressureRegulator On 0
   s PressureRegulator On 1
   j done
