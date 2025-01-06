@@ -89,7 +89,7 @@ activate:
   sub r15 r15 PressurantTargetMoles
   max r15 r15 0
   sqrt r14 r10
-  div r15 r15 r4
+  div r15 r15 r14 
   add r15 r15 PressurantTargetMoles
   div r15 PressurantTargetMoles r15
   sb GasMixer Setting r15
