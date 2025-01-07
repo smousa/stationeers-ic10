@@ -1,0 +1,68 @@
+# Initialize Specific Heat Values
+define ArrayLen 6
+define ElementLen 3
+move sp 0
+push LogicType.RatioOxygen
+push LogicType.RatioLiquidOxygen
+push 21.1 # OxygenSpecificHeat
+push LogicType.RatioNitrogen
+push LogicType.RatioLiquidNitrogen
+push 20.6 # NitrogenSpecificHeat
+push LogicType.RatioCarbonDioxide
+push LogicType.RatioLiquidCarbonDioxide
+push 28.2 # CarbonDioxideSpecificHeat
+push LogicType.RatioPollutant
+push LogicType.RatioLiquidPollutant
+push 24.8 # PollutantSpecificHeat
+push LogicType.RatioNitrousOxide
+push LogicType.RatioLiquidNitrousOxide
+push 37.2 # NitrousOxideSpecificHeat
+push LogicType.RatioVolatiles
+push LogicType.RatioLiquidVolatiles
+push 20.4 # VolatilesSpecificHeat
+
+define WaterSpecificHeat 72
+
+# Inputs
+alias d0 PipeAnalyzer
+alias TotalMolesValue LogicType.Channel0
+alias TemperatureValue LogicType.Channel1
+alias PressureValue LogicType.Channel2
+
+main:
+ l r0 PipeAnalyzer TotalMoles
+ s db:0 TotalMolesValue r0
+ l r1 PipeAnalyzer Temperature
+ s db:0 TemperatureValue r1
+ l r2 PipeAnalyzer Pressure
+ s db:0 PressureValue r2
+ move r3 0 # SpecificHeat
+ beqz r0 done
+
+  move r15 0 # Loop Iterator
+  move r14 0 # Total Ratio
+loop:
+  get r13 db r15 # LogicType.RatioGas
+  l r12 PipeAnalyzer r13
+  add r15 r15 1
+  get r13 db r15 # LogicType.RatioLiquid
+  l r13 PipeAnalyzer r13
+  add r12 r12 r13 # Ratio of type
+  add r14 r14 r12 # Ratio of total
+  add r15 r15 1
+  get r13 db r15  # SpecificHeat
+  mul r12 r12 r13 # Partial Specific Heat
+  add r3 r3 r12   # Total Specific Heat
+  add r15 r15 1
+  div r13 r15 ElementLen
+  blt r13 ArrayLen loop
+
+  # Add Steam/Water/Polluted Water
+  sub r15 1 r14
+  mul r15 r15 WaterSpecificHeat
+  add r3 r3 r15
+  
+done:
+  s db Setting r3
+  yield
+  j main
