@@ -25,19 +25,13 @@ define WaterSpecificHeat 72
 
 # Inputs
 alias d0 PipeAnalyzer
-alias TotalMolesValue LogicType.Channel0
-alias TemperatureValue LogicType.Channel1
-alias PressureValue LogicType.Channel2
+
+define SpecificHeat LogicType.Channel0
 
 main:
- l r0 PipeAnalyzer TotalMoles
- s db:0 TotalMolesValue r0
- l r1 PipeAnalyzer Temperature
- s db:0 TemperatureValue r1
- l r2 PipeAnalyzer Pressure
- s db:0 PressureValue r2
- move r3 0 # SpecificHeat
- beqz r0 done
+  l r0 PipeAnalyzer TotalMoles
+  beqz r0 done
+  move r0 0
 
   move r15 0 # Loop Iterator
   move r14 0 # Total Ratio
@@ -52,7 +46,7 @@ loop:
   add r15 r15 1
   get r13 db r15  # SpecificHeat
   mul r12 r12 r13 # Partial Specific Heat
-  add r3 r3 r12   # Total Specific Heat
+  add r0 r0 r12   # Total Specific Heat
   add r15 r15 1
   div r13 r15 ElementLen
   blt r13 ArrayLen loop
@@ -60,9 +54,10 @@ loop:
   # Add Steam/Water/Polluted Water
   sub r15 1 r14
   mul r15 r15 WaterSpecificHeat
-  add r3 r3 r15
+  add r0 r0 r15
   
 done:
   s db Setting r3
+  s PipeAnalyzer:0 SpecificHeat r3
   yield
   j main
