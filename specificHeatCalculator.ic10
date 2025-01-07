@@ -36,25 +36,25 @@ main:
   move r15 0 # Loop Iterator
   move r14 0 # Total Ratio
 loop:
-  get r13 db r15 # LogicType.RatioGas
-  l r12 PipeAnalyzer r13
+  get r12 db r15 # LogicType.RatioGas
+  l r13 PipeAnalyzer r12
   add r15 r15 1
-  get r13 db r15 # LogicType.RatioLiquid
-  l r13 PipeAnalyzer r13
-  add r12 r12 r13 # Ratio of type
-  add r14 r14 r12 # Ratio of total
+  get r12 db r15 # LogicType.RatioLiquid
+  l r12 PipeAnalyzer r12
+  add r13 r13 r12 # Ratio of type
+  add r14 r14 r13 # Ratio of total
   add r15 r15 1
-  get r13 db r15  # SpecificHeat
-  mul r12 r12 r13 # Partial Specific Heat
-  add r0 r0 r12   # Total Specific Heat
+  get r12 db r15  # SpecificHeat
+  mul r13 r13 r12 # Partial Specific Heat
+  add r0 r0 r13   # Total Specific Heat
   add r15 r15 1
-  div r13 r15 ElementLen
-  blt r13 ArrayLen loop
+  div r12 r15 ElementLen
+  blt r12 ArrayLen loop
 
   # Add Steam/Water/Polluted Water
-  sub r15 1 r14
-  mul r15 r15 WaterSpecificHeat
-  add r0 r0 r15
+  sub r13 1 r14
+  mul r13 r13 WaterSpecificHeat
+  add r0 r0 r13
   
 done:
   s db Setting r0
