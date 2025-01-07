@@ -24,7 +24,7 @@ push 20.4 # VolatilesSpecificHeat
 define WaterSpecificHeat 72
 
 # Inputs
-alias d0 PipeAnalyzer
+alias PipeAnalyzer d0
 
 define SpecificHeat LogicType.Channel0
 
