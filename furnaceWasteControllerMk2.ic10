@@ -30,9 +30,7 @@ main:
 
   # Turn on if partial pressure is less than condensation pressure
   l r4 Source RatioPollutantOutput2
-  l r5 Source RatioLiquidPollutantOutput2
-  add r14 r4 r5
-  sub r13 1 r14
+  sub r13 1 r4
   mul r13 r13 r3
   slt r15 r13 CondensationPressure
 
