@@ -40,14 +40,14 @@ main:
   mul r14 r14 CondensationPressure
   div r14 r14 r3
   div r14 r14 CondensationTemperature # Moles needed
-  add r13 r6 r7                       # Moles of X present
-  select r12 r13 0 r5
-  bnez r12 flushFiltration            # Off if none of moles are X
-  move r15 1
-  bnan r14 flushFiltration            # On if moles = 0
-  sub r13 1 r13
-  mul r13 r13 r5                      # Total moles not X
-  sgt r15 r13 r14
+  add r13 r6 r7
+  sub r13 1 r13 # Ratio not X
+  slt r12 r13 1
+  select r15 r5 r12 1
+  beqz r5 flushFiltration 
+  beqz r12 flushFiltration
+  mul r13 r13 r5
+  sle r15 r13 r14
 
 flushFiltration:
   s Source Mode r15
