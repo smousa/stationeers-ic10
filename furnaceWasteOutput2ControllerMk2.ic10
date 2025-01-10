@@ -80,9 +80,8 @@ main:
   select r14 r8 r14 0
   s VolumePump On r14
 
-  # Turn on purge valve if SourcePipe.VolumePump.Setting == 0 || SourcePipe.Pressure == 0
+  # Turn on purge valve if SourcePipe.VolumePump.Setting == 0
   seqz r13 r15
-  select r13 r8 r13 1
   s PurgeValve On r13
   
   yield
