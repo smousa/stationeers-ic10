@@ -2,120 +2,96 @@
 define GasMixer HASH("StructureGasMixer")
 define BackPressureRegulator HASH("StructureBackPressureRegulator")
 define PressureRegulator HASH("StructurePressureRegulator")
+
 # Constants
 define Enthalpy 572000
 define V 1000
 define IdealGasConstant 8.314
-# Inputs/Outputs
+
+# Channels
+define SpecificHeat LogicType.Channel0
+define FuelConstant LogicType.Channel7
+
+# Devices
 alias Furnace d0
-alias PipeAnalyzer d1
-alias P d2 # Target Pressure
-alias T d3 # Target Temperature
-alias M2 d4 # Fuel Enthalpy Multiplier^2 (4 - HydroNitrox or 9 - HydrOx)
-# Initialize Specific Heat Table
-move sp 0
-define SpecificHeatStart 0
-define SpecificHeatSize 6
-push LogicType.RatioOxygen
-push 21.1 # OxygenSpecificHeat
-push LogicType.RatioNitrogen
-push 20.6 # NitrogenSpecificHeat
-push LogicType.RatioCarbonDioxide
-push 28.2 # CarbonDioxideSpecificHeat
-push LogicType.RatioPollutant
-push 24.8 # PollutantSpecificHeat
-push LogicType.RatioNitrousOxide
-push 37.2 # NitrousOxideSpecificHeat
-push LogicType.VolatilesSpecificHeat
-push 20.4 # VolatilesSpecificHeat
-# Global Variables
-alias TargetMoles r1
-alias FurnaceTotalMoles r2
-alias FurnaceTemperature r3
-alias FurnaceSpecificHeat r4
-alias PressurantTargetMoles r5
-alias PressurantSpecificHeat r6
-alias PressurantTemperature r7
-main:
-  l r15 db Setting
-  bnez r15 activate
+alias Fuel d1
+alias Pressurant d2
+alias P d3 # Target Pressure
+alias T d4 # Target Temperature
+alias Connection d5 # Connection to read furnace channel data 
+
+main
+  l r0 db Setting
+  bnez r0 activate
   sb GasMixer On 0
   sb BackPressureRegulator On 0
   sb PressureRegulator On 0
   j done
+
 activate:
+  l r0 Connection Setting
+  l r0 Furnace:r0 SpecificHeat
+  l r1 Furnace Temperature
+  l r2 Furnace TotalMoles
+  l r3 Pressurant:0 SpecificHeat
+  l r4 Pressurant Temperature
+  l r5 Fuel:0 FuelConstant
+  l r6 Fuel Temperature
+  l r7 P Setting
+  l r8 T Setting
+
+  # Calculate Furnace Target Moles
+  mul r15 r7 V
+  div r15 r15 IdealGasConstant
+  div r15 r15 r8
+
+  # Calculate target moles of the pressurant
+  mul r14 r15 Enthalpy
+  mul r13 r2 Enthalpy
+  sub r14 r14 r13
+  sub r13 r8 r1
+  mul r13 r13 r0
+  mul r13 r13 r2
+  mul r13 r13 r5
+  sub r14 r14 r13
+  sub r13 r8 r4
+  mul r13 r13 r3
+  mul r13 r13 r5
+  add r13 r13 Enthalpy
+  div r14 r14 r13
+
+  # Calculate target moles of fuel
+  sub r13 r15 r2
+  sub r13 r13 r14
+  sqrt r12 r5
+  div r13 r13 r12
+  min r13 r13 0
+
+  # Compute the normalized ratio
+  add r12 r13 r14
+  div r12 r14 r12
+  sub r11 1 r12
+  mul r11 r11 r6
+  mul r12 r12 r4
+  add r11 r11 r12
+  div r12 r12 r11
+
+  # Turn on the back pressure regulator
   sb BackPressureRegulator On 1
-  # Calculate specific heat of furnace
-  push 0
-  jal callGetSpecificHeat
-  pop FurnaceSpecificHeat
-  pop FurnaceTemperature
-  pop FurnaceTotalMoles
-  # Calculate specific heat of pressurant pipe
-  push 1
-  jal callGetSpecificHeat
-  pop PressurantSpecificHeat
-  pop PressurantTemperature
-  pop PressurantTargetMoles
-  # Load Settings
-  l r8 P Setting
-  l r9 T Setting
-  l r10 M2 Setting
-  # Calculate target moles
-  mul TargetMoles r8 V
-  div TargetMoles TargetMoles IdealGasConstant
-  div TargetMoles TargetMoles r9
-  # If furnace moles are too high, turn on the valve
-  sgt r15 FurnaceTotalMoles TargetMoles
-  sb PressureRegulator On r15
-  # Calculate target moles of pressurant
-  mul PressurantTargetMoles Enthalpy TargetMoles
-  mul r15 Enthalpy FurnaceTotalMoles
-  sub PressurantTargetMoles PressurantTargetMoles r15
-  mul r15 r10 FurnaceTotalMoles
-  mul r15 r15 FurnaceSpecificHeat
-  sub r14 r9 FurnaceTemperature
-  mul r15 r15 r14
-  sub PressurantTargetMoles PressurantTargetMoles r15
-  mul r15 r10 PressurantSpecificHeat
-  sub r14 r9 PressurantTemperature
-  mul r15 r15 r14
-  add r15 r15 Enthalpy
-  div PressurantTargetMoles PressurantTargetMoles r15
-  sgtz r15 PressurantTargetMoles
-  sb GasMixer On r15
-  # Calculate the target mixture ratio
-  sub r15 TargetMoles FurnaceTotalMoles
-  sub r15 r15 PressurantTargetMoles
-  max r15 r15 0
-  sqrt r14 r10
-  div r15 r15 r14 
-  add r15 r15 PressurantTargetMoles
-  div r15 PressurantTargetMoles r15
-  sb GasMixer Setting r15
-  s Furnace Activate 1
-done:
+
+  # Release gases when moles are too high
+  sgt r11 r2 r15
+  sb PressureRegulator On r11
+  
+  # Turn on mixer if pressurant moles > 0
+  sgtz r11 r14
+  sb GasMixer On r11
+  sb GasMixer Setting r12
+
+  # Activate furnace if fuel > 0
+  slt r10 r12 1
+  and r11 r11 r10
+  sb Furnace Activate r11
+
   yield
   j main
-callGetSpecificHeat:
-  pop r15 # Device
-  l r14 dr15 TotalMoles
-  l r13 dr15 Temperature
-  move r12 0 # Specific Heat
-  beqz r14 returnGetSpecificHeat
-  move r11 0 # Loop Iterator
-loopGetSpecificHeat:
-  add r10 r0 r11
-  get r9 db r10 # Logic Type
-  l r9 dr15 r9
-  add r10 r10 1
-  get r8 db r10 # Specific Heat
-  mul r9 r9 r8
-  add r12 r12 r9
-  add r11 r11 1
-  blt r11 SpecificHeatSize loopGetSpecificHeat 
-returnGetSpecificHeat:
-  push r14
-  push r13 
-  push r12
-  j ra
