@@ -88,10 +88,11 @@ activate:
   sb GasMixer On r11
   sb GasMixer Setting r12
 
+  yield
+
   # Activate furnace if fuel > 0
   slt r10 r12 1
   and r11 r11 r10
   sb Furnace Activate r11
 
-  yield
   j main
