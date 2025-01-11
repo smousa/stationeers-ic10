@@ -26,7 +26,8 @@ main
   sb GasMixer On 0
   sb BackPressureRegulator On 0
   sb PressureRegulator On 0
-  j done
+  yield
+  j main
 
 activate:
   l r0 Connection Setting
