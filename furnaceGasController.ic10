@@ -18,7 +18,7 @@ alias Fuel d1
 alias Pressurant d2
 alias P d3 # Target Pressure
 alias T d4 # Target Temperature
-alias Connection d5 # Connection to read furnace channel data 
+alias SpecificHeatCalculator d5
 
 main
   l r0 db Setting
@@ -30,8 +30,7 @@ main
   j main
 
 activate:
-  l r0 Connection Setting
-  l r0 Furnace:r0 SpecificHeat
+  l r0 SpecificHeatCalculator Setting
   l r1 Furnace Temperature
   l r2 Furnace TotalMoles
   l r3 Pressurant:0 SpecificHeat
