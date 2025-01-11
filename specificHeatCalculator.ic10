@@ -25,10 +25,17 @@ define WaterSpecificHeat 72
 
 # Inputs
 alias PipeAnalyzer d0
+alias Connection d1
 
 define SpecificHeat LogicType.Channel0
 
 main:
+  # Get the connection to write data (default: 0)
+  sdse r1 Connection
+  beqz r1 compute
+  l r1 Connection Setting
+
+compute:
   l r0 PipeAnalyzer TotalMoles
   beqz r0 done
   move r0 0
@@ -58,6 +65,6 @@ loop:
   
 done:
   s db Setting r0
-  s PipeAnalyzer:0 SpecificHeat r0
+  s PipeAnalyzer:r1 SpecificHeat r0
   yield
   j main
