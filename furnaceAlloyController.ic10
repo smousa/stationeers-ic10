@@ -52,7 +52,3 @@ furnaceExportWait:
   bgtz r0 activate
   yield
   j main
-
-  
-
-
