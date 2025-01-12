@@ -16,6 +16,7 @@ main:
   l r1 Recipe Setting
 
 activate:
+  s db Lock 1
   s Furnace ClearMemory 1
   sbn ChuteValve Ingredients Open 1
 
@@ -49,6 +50,7 @@ furnaceExportWait:
   sub r0 r0 1
   s db Setting r0
   bgtz r0 activate
+  s db Lock 0
 
 done:
   yield
