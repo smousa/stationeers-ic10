@@ -1,0 +1,58 @@
+# Structures 
+define ChuteValve HASH("StructureLogicMirror")
+
+# Subnets
+define Ingredients HASH("Ingredients")
+
+# Devices
+alias Furnace d0
+alias GasController d1
+alias Recipe d2
+
+main:
+  l r0 db Setting
+  bgtz r0 activate
+  yield
+  j main
+
+activate:
+  l r1 Recipe Setting
+  s Furnace ClearMemory 1
+  sbn ChuteValve Ingredients Open 1
+
+ingredientsWait:
+  yield
+  lbn r2 ChuteValve Ingredients Open Sum
+  bgtz r2 ingredientsWait
+
+  s GasController Setting 1
+  lbn r2 ChuteValve Ingredients Quantity Sum
+
+furnaceImportWait:
+  yield   
+  l r3 Furnace ImportCount
+  blt r3 r2 furnaceImportWait
+
+furnaceRecipeWait:
+  yield
+  l r3 Furnace RecipeHash
+  bneq r3 r1 furnaceRecipeWait
+
+  s Furnace Open 1
+
+furnaceExportWait:
+  yield
+  l r4 Furnace ExportCount
+  beqz r4 furnaceExportWait
+
+  s Furnace Open 0
+  s GasController Setting 0
+  sub r0 r0 1
+  s db Setting r0
+  bgtz r0 activate
+  yield
+  j main
+
+  
+
+
