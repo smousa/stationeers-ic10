@@ -11,9 +11,7 @@ alias Recipe d2
 
 main:
   l r0 db Setting
-  bgtz r0 activate
-  yield
-  j main
+  blez r0 done
 
 activate:
   l r1 Recipe Setting
@@ -50,5 +48,7 @@ furnaceExportWait:
   sub r0 r0 1
   s db Setting r0
   bgtz r0 activate
+
+done:
   yield
   j main
