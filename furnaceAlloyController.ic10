@@ -13,8 +13,9 @@ main:
   l r0 db Setting
   blez r0 done
 
-activate:
   l r1 Recipe Setting
+
+activate:
   s Furnace ClearMemory 1
   sbn ChuteValve Ingredients Open 1
 
