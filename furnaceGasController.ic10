@@ -93,6 +93,6 @@ activate:
   # Activate furnace if fuel > 0
   slt r10 r12 1
   and r11 r11 r10
-  sb Furnace Activate r11
+  s Furnace Activate r11
 
   j main
