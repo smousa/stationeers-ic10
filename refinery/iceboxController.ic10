@@ -4,11 +4,9 @@ alias Heater d1
 alias GasSensor d2
 alias Stacker d3
 alias Door d4
-alias ActiveVent d5
 
 s Stacker Mode 1
 s Door Mode 1
-s ActiveVent Mode 1
 
 main:
   l r0 db Setting
@@ -49,7 +47,6 @@ main:
   beqz r0 done
 
   s Stacker ClearMemory 1
-  s ActiveVent On 1
   s db Setting 0
 
 done 
