@@ -1,0 +1,27 @@
+# Devices
+alias d0 HeatSwitch
+alias d1 HeatValve
+alias d2 HeatPump
+alias d3 CoolSwitch
+alias d4 CoolValve
+alias d5 CoolPump
+
+heater:
+  bdns HeatSwitch cooler
+  l r0 HeatSwitch Setting
+  snez r0 r0
+  seqz r1 r0
+  s HeatValve On r0
+  s HeatPump On r1
+
+cooler:
+  bdns CoolSwitch done
+  l r0 CoolSwitch Setting
+  snez r0 r0
+  seqz r1 r0
+  s CoolValve On r0
+  s CoolPump On r1
+
+done:
+  yield
+  j heater
