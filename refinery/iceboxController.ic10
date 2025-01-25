@@ -1,0 +1,57 @@
+# Devices
+alias IceMoles d0
+alias Heater d1
+alias GasSensor d2
+alias Stacker d3
+alias Door d4
+alias ActiveVent d5
+
+s Stacker Mode 1
+s Door Mode 1
+s ActiveVent Mode 1
+
+main:
+  l r0 db Setting
+  l r1 Stacker ExportCount
+  l r2 GasSensor TotalMoles
+  l r3 Stacker Setting
+  l r4 IceMoles Setting
+  l r5 Door Setting
+
+  # Lock the stacker if the setting is applied
+  sgtz r15 r0
+  s Stacker Lock r15
+
+  # Lock the door if ice has been released or
+  # Gas is in the chamber
+  add r15 r1 r2
+  sgtz r15 r15
+  s Door Lock r15
+
+  # Open the door if it is unlocked and the setting is set
+  select r15 r15 0 r5
+  s Door Open r15
+
+  # Open the stacker
+  # If the setting is applied and
+  # The door is closed and
+  # ExportCount < Setting
+  slt r14 r1 r0
+  select r14 r14 1 -1
+  select r15 r15 -1 r14
+  s Stacker Output r15
+
+  mul r15 r0 r3
+  mul r15 r15 r4
+  slt r15 r2 r15
+  s Heater Open r15
+  bnez r15 done
+  beqz r0 done
+
+  s Stacker ClearMemory 1
+  s ActiveVent On 1
+  s db Setting 0
+
+done 
+  yield
+  j main
