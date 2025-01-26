@@ -6,13 +6,12 @@ define HeatPump  HASH("StructureVolumePump")
 define HeatValve HASH("StructureDigitalValve")
 
 # Devices
-alias Activator d0  # Switch
-alias StackCount d1 # Dial
-alias IceMoles d2   # Memory
+alias StackCount d0 # Dial
+alias IceMoles   d1 # Memory
 
 main:
-  l r0 Activator NameHash
-  l r1 Activator Setting
+  l r0 db NameHash
+  l r1 db Setting
   l r2 StackCount Setting
   l r3 IceMoles Setting 
 
@@ -57,7 +56,7 @@ main:
   bnez r15 done
   beqz r1 done
   sbn Stacker r0 ClearMemory 1
-  s Activator Open 0
+  s db Setting 0
 
 done:
   yield
