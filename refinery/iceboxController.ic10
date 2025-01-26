@@ -6,8 +6,8 @@ define HeatPump  HASH("StructureVolumePump")
 define HeatValve HASH("StructureDigitalValve")
 
 # Devices
-alias StackCount d0 # Dial
-alias IceMoles   d1 # Memory
+alias IceMoles   d0 # Memory 
+alias StackCount d1 # Dial
 
 main:
   l r0 db NameHash
