@@ -1,54 +1,60 @@
-# Devices
-alias IceMoles d0
-alias Heater d1
-alias GasSensor d2
-alias Stacker d3
-alias Door d4
+# Structures
+define GasSensor HASH("StructureGasSensor")
+define Stacker   HASH("StructureStacker")
+define Door      HASH("StructureCompositeDoor")
+define HeatPump  HASH("StructureVolumePump")
+define HeatValve HASH("StructureDigitalValve")
 
-s Stacker Mode 1
-s Door Mode 1
+# Devices
+alias Network d0
+alias IceMoles d1
 
 main:
-  l r0 db Setting
-  l r1 Stacker ExportCount
-  l r2 GasSensor TotalMoles
-  l r3 Stacker Setting
-  l r4 IceMoles Setting
-  l r5 Door Setting
+  l r0 Network Setting
+  l r1 IceMoles Setting
+  l r2 db Setting 
 
-  # Lock the stacker if the setting is applied
-  sgtz r15 r0
-  s Stacker Lock r15
+  sbn Stacker r0 Mode 1
+  sbn Door r0 Mode 1
+  
+  lbn r3 Stacker r0 ExportCount Average
+  lbn r4 Stacker r0 Setting Average
+  lbn r5 GasSensor r0 TotalMoles Average
+  lbn r6 Door r0 Setting Maximum
 
-  # Lock the door if ice has been released or
-  # Gas is in the chamber
-  add r15 r1 r2
-  sgtz r15 r15
-  s Door Lock r15
+  # Lock the stacker for device setting
+  sgtz r15 r2
+  sbn Stacker r0 Lock r15
+  
+  # Lock the door when ice exported or gas
+  add r15 r3 r5
+  sgtz r15 r15 
+  sbn Door r0 Lock r15
 
-  # Open the door if it is unlocked and the setting is set
-  select r15 r15 0 r5
-  s Door Open r15
+  # Open door when unlocked and open requested
+  select r15 r15 0 r6
+  sbn Door r0 Open r15
 
-  # Open the stacker
-  # If the setting is applied and
-  # The door is closed and
-  # ExportCount < Setting
-  slt r14 r1 r0
+  # Open stacker if door closed and export count lt device setting
+  slt r14 r3 r2
   select r14 r14 1 -1
   select r15 r15 -1 r14
-  s Stacker Output r15
+  sbn Stacker r0 Output r15
 
-  mul r15 r0 r3
+  # Melt the ice
+  mul r15 r1 r3
   mul r15 r15 r4
-  slt r15 r2 r15
-  s Heater Open r15
-  bnez r15 done
-  beqz r0 done
+  slt r15 r5 r15
+  seqz r14 r15 
+  sbn HeatValve r0 On r15
+  sbn HeatPump r0 On r14
 
-  s Stacker ClearMemory 1
+  # Reset
+  bnez r15 done
+  beqz r2 done
+  sbn Stacker r0 ClearMemory 1
   s db Setting 0
 
-done 
+done:
   yield
   j main
