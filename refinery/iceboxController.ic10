@@ -40,6 +40,7 @@ main:
   select r14 r14 1 -1
   select r15 r15 -1 r14
   sbn Stacker r0 Output r15
+  beq r15 1 done
 
   # Melt the ice
   mul r15 r1 r3
