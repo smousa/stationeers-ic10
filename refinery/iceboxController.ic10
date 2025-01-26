@@ -1,59 +1,63 @@
 # Structures
+define GasSensor HASH("StructureGasSensor")
 define Stacker   HASH("StructureStacker")
 define Door      HASH("StructureCompositeDoor")
 define HeatPump  HASH("StructureVolumePump")
 define HeatValve HASH("StructureDigitalValve")
 
 # Devices
-alias GasSensor d0
-alias IceMoles d1
+alias Activator d0  # Switch
+alias StackCount d1 # Dial
+alias IceMoles d2   # Memory
 
 main:
-  l r0 GasSensor NameHash
-  l r1 IceMoles Setting
-  l r2 db Setting 
+  l r0 Activator NameHash
+  l r1 Activator Setting
+  l r2 StackCount Setting
+  l r3 IceMoles Setting 
 
   sbn Stacker r0 Mode 1
   sbn Door r0 Mode 1
-  
-  lbn r3 Stacker r0 ExportCount Average
-  lbn r4 Stacker r0 Setting Average
-  l r5 GasSensor TotalMoles
-  lbn r6 Door r0 Setting Maximum
 
-  # Lock the stacker for device setting
-  sgtz r15 r2
+  lbn r4 GasSensor r0 TotalMoles Average
+  lbn r5 Stacker r0 ExportCount Average 
+  lbn r6 Stacker r0 Setting Average
+  lbn r7 Door r0 Setting Maximum
+
+  # Lock devices when activated
+  snez r15 r1
+  s StackCount Lock r15 
   sbn Stacker r0 Lock r15
   
-  # Lock the door when ice exported or gas
-  add r15 r3 r5
+  # Lock door when ice or gas present
+  add r15 r4 r5
   sgtz r15 r15 
   sbn Door r0 Lock r15
 
-  # Open door when unlocked and open requested
-  select r15 r15 0 r6
-  sbn Door r0 Open r15
+  # Check for open door
+  select r15 r15 0 r7
+  sbn Door r0 Open r15 
 
-  # Open stacker if door closed and export count lt device setting
-  slt r14 r3 r2
+  # Release stacker when activated
+  slt r14 r5 r2
   select r14 r14 1 -1
   select r15 r15 -1 r14
-  sbn Stacker r0 Output r15
+  sbn Stacker r0 Output r15 
   beq r15 1 done
 
   # Melt the ice
-  mul r15 r1 r3
-  mul r15 r15 r4
-  slt r15 r5 r15
+  mul r15 r2 r3
+  mul r15 r15 r6
+  slt r15 r4 r15 
   seqz r14 r15 
   sbn HeatValve r0 On r15
   sbn HeatPump r0 On r14
 
   # Reset
   bnez r15 done
-  beqz r2 done
+  beqz r1 done
   sbn Stacker r0 ClearMemory 1
-  s db Setting 0
+  s Activator Open 0
 
 done:
   yield
