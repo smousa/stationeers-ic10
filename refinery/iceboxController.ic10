@@ -1,16 +1,15 @@
 # Structures
-define GasSensor HASH("StructureGasSensor")
 define Stacker   HASH("StructureStacker")
 define Door      HASH("StructureCompositeDoor")
 define HeatPump  HASH("StructureVolumePump")
 define HeatValve HASH("StructureDigitalValve")
 
 # Devices
-alias Network d0
+alias GasSensor d0
 alias IceMoles d1
 
 main:
-  l r0 Network Setting
+  l r0 GasSensor NameHash
   l r1 IceMoles Setting
   l r2 db Setting 
 
@@ -19,7 +18,7 @@ main:
   
   lbn r3 Stacker r0 ExportCount Average
   lbn r4 Stacker r0 Setting Average
-  lbn r5 GasSensor r0 TotalMoles Average
+  l r5 GasSensor TotalMoles
   lbn r6 Door r0 Setting Maximum
 
   # Lock the stacker for device setting
