@@ -8,7 +8,6 @@ define VolatilesPipe HASH("VolatilesPipeNetwork")
 
 # Devices
 alias Icebox     d0 # IC Housing
-alias Thermostat d1 # Memory
 
 main:
   move r15 0
