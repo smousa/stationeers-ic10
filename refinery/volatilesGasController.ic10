@@ -7,7 +7,7 @@ define VolatilesIcebox HASH("Volatiles Icebox")
 define VolatilesPipe HASH("VolatilesPipeNetwork")
 
 # Devices
-alias Icebox     d0 # IC Housing
+alias Icebox d0 # IC Housing
 
 main:
   move r15 0
