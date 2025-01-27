@@ -6,22 +6,25 @@ define HeatPump  HASH("StructureVolumePump")
 define HeatValve HASH("StructureDigitalValve")
 
 # Devices
-alias IceMoles   d0 # Memory 
-alias StackCount d1 # Dial
+alias IceMoles   d0 # Memory
+alias Thermostat d1 # Memory
+alias StackCount d2 # Dial
 
 main:
   l r0 db NameHash
   l r1 db Setting
   l r2 StackCount Setting
-  l r3 IceMoles Setting 
+  l r3 IceMoles Setting
+  l r4 Thermostat Setting
 
   sbn Stacker r0 Mode 1
   sbn Door r0 Mode 1
 
-  lbn r4 GasSensor r0 TotalMoles Average
-  lbn r5 Stacker r0 ExportCount Average 
-  lbn r6 Stacker r0 Setting Average
-  lbn r7 Door r0 Setting Maximum
+  lbn r5 GasSensor r0 TotalMoles Average
+  lbn r6 GasSensor r0 Temperature Average 
+  lbn r7 Stacker r0 ExportCount Average 
+  lbn r8 Stacker r0 Setting Average
+  lbn r9 Door r0 Setting Maximum
 
   # Lock devices when activated
   snez r15 r1
@@ -29,32 +32,34 @@ main:
   sbn Stacker r0 Lock r15
   
   # Lock door when ice or gas present
-  add r15 r4 r5
+  add r15 r5 r7
   sgtz r15 r15 
   sbn Door r0 Lock r15
 
   # Check for open door
-  select r15 r15 0 r7
+  select r15 r15 0 r9
   sbn Door r0 Open r15 
 
   # Release stacker when activated
-  slt r14 r5 r2
+  beqz r1 done 
+  slt r14 r7 r2
   select r14 r14 1 -1
   select r15 r15 -1 r14
   sbn Stacker r0 Output r15 
   beq r15 1 done
 
   # Melt the ice
-  mul r15 r2 r3
-  mul r15 r15 r6
-  slt r15 r4 r15 
-  seqz r14 r15 
-  sbn HeatValve r0 On r15
-  sbn HeatPump r0 On r14
+  slt r15 r6 r4
+  mul r14 r2 r3
+  mul r14 r14 r8
+  slt r14 r5 r14
+  select r13 r14 r15 0
+  seqz r12 r13 
+  sbn HeatValve r0 On r13
+  sbn HeatPump r0 On r12
 
   # Reset
-  bnez r15 done
-  beqz r1 done
+  bnez r14 done
   sbn Stacker r0 ClearMemory 1
   s db Setting 0
 
