@@ -17,7 +17,7 @@ main:
   add r14 r0 r1
   beqz r14 flushFiltration
 
-  # Check pipe pressure/combustion
+  # Check pipe pressure
   lbn r0 ActiveVent VolatilesPipe PressureInternal Average 
   l r1 db PressureInput
   l r2 db RatioVolatilesInput
