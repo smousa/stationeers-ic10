@@ -1,0 +1,16 @@
+# Structures 
+define ActiveVent HASH("StructureActiveVent")
+define GasSensor HASH("StructureGasSensor")
+
+# Networks
+define VolatilesIcebox HASH("Volatiles Icebox")
+define VolatilesPipe HASH("VolatilesPipeNetwork")
+
+# Devices
+alias Icebox     d0 # IC Housing
+alias Thermostat d1 # Memory
+
+main:
+
+  
+  
