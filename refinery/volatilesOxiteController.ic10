@@ -35,8 +35,8 @@ main:
   l r3 Filtration PressureOutput2
   beqz r0 flushFiltration
   select r2 r1 r2 0
-  bge r2 r0 flushFiltration
-  bge r3 r0 flushFiltration 
+  bge r2 MaxPressure flushFiltration
+  bge r3 MaxPressure flushFiltration 
   move r15 1
 
 flushFiltration:
