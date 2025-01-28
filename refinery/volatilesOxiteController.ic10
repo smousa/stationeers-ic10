@@ -1,9 +1,10 @@
 # Configuration 
 define MaxPressure 51675.75
 
-# Structures 
+# Structures
+define Controller HASH("StructureICHousing")
 define ActiveVent HASH("StructureActiveVent")
-define GasSensor HASH("StructureGasSensor")
+define GasSensor  HASH("StructureGasSensor")
 
 # Networks
 define VolatilesIcebox HASH("Volatiles Icebox")
@@ -12,9 +13,7 @@ define OxiteIcebox HASH("Oxite Icebox")
 define OxitePipe HASH("OxitePipeNetwork")
 
 # Devices
-alias Filtration db # IC Housing 
-alias Volatiles  d0 # IC Housing
-alias Oxite      d1 # IC Housing
+alias Filtration db
 
 sbn ActiveVent VolatilesPipe Mode 1
 sbn ActiveVent VolatilesPipe PressureInternal MaxPressure 
@@ -43,14 +42,12 @@ main:
 flushFiltration:
   s db Mode r15
 
-  push VolatilesIcebox
   push VolatilesPipe
-  push 0
+  push VolatilesIcebox
   jal ventilate
 
-  push OxiteIcebox
   push OxitePipe
-  push 1
+  push OxiteIcebox
   jal ventilate
 
   yield
@@ -59,18 +56,16 @@ flushFiltration:
 ventilate:
   pop r0
   pop r1
-  pop r2
 
-  alias Control dr0
-  alias Icebox r1
-  alias Pipe r2
+  alias Icebox r0
+  alias Pipe r1
 
-  l r3 Control Setting
+  lbn r3 Controller Icebox Setting Maximum
   lbn r4 GasSensor Icebox TotalMoles Average
   select r15 r3 0 r4
   sgtz r15 r15
   sbn ActiveVent Pipe On r15
   bgtz r3 ra
   bgtz r4 ra
-  s Control Setting 1
+  sbn Controller Icebox Setting 1
   j ra
