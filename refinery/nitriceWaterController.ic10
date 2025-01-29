@@ -1,0 +1,62 @@
+# Constants
+define MaxPressure
+define N2OMaxPressure
+define H2OMaxPressure
+
+define PollutantCondPressure
+define PollutantCondTemperature
+
+define WasteTemperature
+define WaterTemperature
+define WaterVolume
+
+# Structures 
+define ActiveVent 
+define VolumePump 
+define PipeAnalyzer
+define GasSensor
+define IceboxIC 
+
+# Networks
+define NitriceIcebox 
+define WaterIcebox
+define NitrousOxidePipe
+define NitrogenPipe 
+define SteamPipe 
+define DirtyWastePipe
+define WastePipe
+
+main:
+  # Filtration maintenance
+  # Check filter life
+  # Check input pressure
+  # Check output pressure * ceil(ratioN2O)
+  # Check output2 pressure
+
+  # Nitrice Icebox
+  # Check activation
+  # N:AV = ceil(ratioN)
+  # N2O:AV = floor(ratioN2O)
+  # IC.On = !N:AV && !N2O:AV
+
+  # Nitrogen Pipe
+  # AV off
+  # floor(ratioN)
+  # Check output pressure
+
+  # Steam pipe
+  # AV off
+  # floor(ratioN)
+  # Check output pressure
+
+  # Dirty Waste Pipe
+  # Input not empty
+  # Empty or polluted
+  # Less than max pressure
+  # Less than condensation pressure
+
+  # Clean Waste Pipe
+  # Calculate volume to reach target temp
+  # Not polluted
+
+
