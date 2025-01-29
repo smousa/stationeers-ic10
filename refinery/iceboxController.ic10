@@ -1,58 +1,61 @@
 # Structures
-define GasSensor HASH("StructureGasSensor")
-define Stacker   HASH("StructureStacker")
-define Door      HASH("StructureCompositeDoor")
-define HeatPump  HASH("StructureVolumePump")
-define HeatValve HASH("StructureDigitalValve")
+define GasSensor  HASH("StructureGasSensor")
+define Stacker    HASH("StructureStacker")
+define Door       HASH("StructureCompositeDoor")
+define HeatPump   HASH("StructureVolumePump")
+define HeatValve  HASH("StructureDigitalValve")
 
 # Devices
-alias IceMoles   d0 # Memory
-alias Thermostat d1 # Memory
-alias StackCount d2 # Dial
+alias Activator  d0 # Switch
+alias IceMoles   d1 # Memory
+alias Thermostat d2 # Memory
+alias StackCount d3 # Dial
 
 main:
   l r0 db NameHash
   l r1 db Setting
-  l r2 StackCount Setting
-  l r3 IceMoles Setting
-  l r4 Thermostat Setting
+  l r2 Activator Setting
+  l r3 StackCount Setting
+  l r4 IceMoles Setting
+  l r5 Thermostat Setting
 
   sbn Stacker r0 Mode 1
   sbn Door r0 Mode 1
 
-  lbn r5 GasSensor r0 TotalMoles Average
-  lbn r6 GasSensor r0 Temperature Average 
-  lbn r7 Stacker r0 ExportCount Average 
-  lbn r8 Stacker r0 Setting Average
-  lbn r9 Door r0 Setting Maximum
+  lbn r6 GasSensor r0 TotalMoles Average
+  lbn r7 GasSensor r0 Temperature Average 
+  lbn r8 Stacker r0 ExportCount Average 
+  lbn r9 Stacker r0 Setting Average
+  lbn r10 Door r0 Setting Maximum
 
   # Lock devices when activated
-  snez r15 r1
+  snez r15 r2
   s StackCount Lock r15 
   sbn Stacker r0 Lock r15
   
   # Lock door when ice or gas present
-  add r15 r5 r7
+  add r15 r6 r8
   sgtz r15 r15 
   sbn Door r0 Lock r15
 
   # Check for open door
-  select r15 r15 0 r9
+  select r15 r15 0 r10
   sbn Door r0 Open r15 
 
   # Release stacker when activated
-  beqz r1 done 
-  slt r14 r7 r2
+  beqz r2 done 
+  slt r14 r8 r3
   select r14 r14 1 -1
   select r15 r15 -1 r14
   sbn Stacker r0 Output r15 
   beq r15 1 done
 
   # Melt the ice
-  slt r15 r6 r4
-  mul r14 r2 r3
-  mul r14 r14 r8
-  slt r14 r5 r14
+  slt r15 r7 r5
+  mul r14 r3 r4
+  mul r14 r14 r9
+  add r14 r14 r1
+  slt r14 r6 r14
   select r13 r14 r15 0
   seqz r12 r13 
   sbn HeatValve r0 On r13
@@ -62,6 +65,7 @@ main:
   bnez r14 done
   sbn Stacker r0 ClearMemory 1
   s db Setting 0
+  s Activator Open 0
 
 done:
   yield
