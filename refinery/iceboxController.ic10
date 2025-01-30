@@ -43,7 +43,7 @@ main:
   sbn Door r0 Open r15 
 
   # Release stacker when activated
-  beqz r2 done 
+  beqz r2 reset 
   slt r14 r8 r3
   select r14 r14 1 -1
   select r15 r15 -1 r14
@@ -64,8 +64,10 @@ main:
   # Reset
   bnez r14 done
   sbn Stacker r0 ClearMemory 1
-  s db Setting 0
   s Activator Open 0
+
+reset:
+  s db Setting r6
 
 done:
   yield
