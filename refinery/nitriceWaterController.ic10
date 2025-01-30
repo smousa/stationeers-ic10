@@ -37,7 +37,15 @@ main:
   # Check activation
   # N:AV = ceil(ratioN)
   # N2O:AV = floor(ratioN2O)
-  # IC.On = !N:AV && !N2O:AV
+  # IC.Activate = totalMoles = 0
+
+  # Water Icebox
+  # Check activation
+  # Steam:AV = ceil(ratioN)
+  # Steam:AV = GasSensor.Temp > Target
+  # IC.Activate = !Steam:AV.On
+  # IC.Setting = TotalMoles
+  
 
   # Nitrogen Pipe
   # AV off
@@ -52,6 +60,7 @@ main:
   # Dirty Waste Pipe
   # Input not empty
   # Empty or polluted
+  # not Activate 
   # Less than max pressure
   # Less than condensation pressure
 
