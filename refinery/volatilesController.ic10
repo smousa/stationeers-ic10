@@ -52,7 +52,7 @@ flushFiltration:
   sbn ActiveVent Pipe PressureInternal MaxPressure
 
   l r0 IceboxActivator Setting
-  l r1 GasSensor TotalMoles
+  lbn r1 GasSensor Icebox TotalMoles Average
 
   # Turn vent on when the activator is off and gas is present
   select r15 r0 0 r1
