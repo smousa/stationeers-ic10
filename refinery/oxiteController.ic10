@@ -1,0 +1,47 @@
+# Configuration
+define MaxPressure 51675.75
+
+# Structures
+define GasSensor    HASH("StructureGasSensor")
+define PipeAnalyzer HASH("PipeAnalysizer")
+define ActiveVent   HASH("StructureActiveVent")
+define CoolPump     HASH("StrucutureVolumePump")
+define CoolValve    HASH("StructureDigitalValve")
+
+# Networks
+define Icebox HASH("Oxite Icebox")
+define Pipe   HASH("OxitePipeNetwork")
+
+# Devices
+alias IceboxActivator d0 # Switch
+alias Thermostat d1      # Memory
+
+main:
+  # Monitor the temperature
+  l r0 Thermostat Setting
+  lbn r1 PipeAnalyzer Pipe TemperatureOutput Average
+  sgt r15 r1 r0
+  seqz r14 r15
+  sbn CoolValve Pipe On r15
+  sbn CoolPump Pipe On r14
+
+  # Monitor the pipe
+  sbn ActiveVent Pipe Mode 1 # Inward
+  sbn ActiveVent Pipe PressureInternal MaxPressure
+
+  l r0 IceboxActivator Setting
+  lbn r1 GasSensor Icebox TotalMoles Average
+
+  # Turn vent on when the activator is off and gas is present
+  select r15 r0 0 r1
+  sgtz r15 r15
+  sbn ActiveVent Pipe On r15
+
+  # Turn the activator on when the vent is off and no gas is present
+  bnez r0 done
+  seqz r15 r15
+  s Activator Open r15
+
+done:
+  yield
+  j main
