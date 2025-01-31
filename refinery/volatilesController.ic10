@@ -4,7 +4,7 @@ define MaxPressure 51675.75
 # Structures
 define GasSensor  HASH("StructureGasSensor")
 define ActiveVent HASH("StructureActiveVent")
-define CoolPump   HASH("StrucutureVolumePump")
+define CoolPump   HASH("StructureVolumePump")
 define CoolValve  HASH("StructureDigitalValve")
 
 # Networks
