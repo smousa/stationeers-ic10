@@ -67,8 +67,8 @@ main:
 
 reset:
   s db Setting r6
-  bgtz r8 done
   sbn Stacker r0 Output -1
+  bgtz r8 done 
   sbn Stacker r0 ClearMemory 1
 
 done:
