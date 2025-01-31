@@ -41,7 +41,7 @@ flushFiltration:
 
   # Monitor the temperature
   l r0 Thermostat Setting
-  lbn r1 GasSensor Filtration TemperatureOutput
+  l r1 Filtration TemperatureOutput
   sgt r15 r1 r0
   seqz r14 r15
   sbn CoolValve Pipe On r15
