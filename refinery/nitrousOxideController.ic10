@@ -18,6 +18,7 @@ define CoolValve    HASH("StructureDigitalValve")
 define Icebox       HASH("Nitrous Oxide Icebox")
 define Pipe         HASH("NitrousOxidePipeNetwork")
 define NitrogenPipe HASH("NitrogenPipeNetwork")
+define SteamPipe    HASH("SteamPipeNetwork")
 define WastePipe    HASH("WastePipeNetwork")
 
 # Devices
@@ -86,6 +87,7 @@ flushWastePipe:
   lbn r2 GasSensor Icebox RatioNitrousOxide Average
   lbn r3 GasSensor Icebox RatioNitrogen Average
   lbn r4 PipeAnalyzer NitrogenPipe RatioNitrogen Average
+  lbn r5 PipeAnalyzer SteamPipe Pressure Average
 
   # Turn on N2O vent when only N2O is present
   floor r15 r2
@@ -98,8 +100,10 @@ flushWastePipe:
   sbn ActiveVent NitrogenPipe On r14
 
   # Turn on N pump when only nitrogen is present and vent off
-  floor r13 r4
-  select r13 r14 0 r13
+  floor r13 r4           # Nitrogen Ratio
+  slt r12 r5 MaxPressure # Output Pressure
+  and r13 r13 r14
+  and r13 r13 r12
   sbn VolumePump NitrogenPipe On r13
 
   # Turn on activator when vent off and no gas present
