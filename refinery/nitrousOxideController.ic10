@@ -1,0 +1,114 @@
+# Configuration
+define MaxPressure 51675.75
+define NitrousOxideMaxPressure 680
+
+define PollutantCondPressure 6000
+define PollutantCondTemp     425
+define IdealGasConstant      8.314
+
+# Structures
+define GasSensor    HASH("StructureGasSensor")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+define ActiveVent   HASH("StructureActiveVent")
+define VolumePump   HASH("StructureVolumePump")
+define CoolPump     HASH("StructureVolumePump")
+define CoolValve    HASH("StructureDigitalValve")
+
+# Networks
+define Icebox       HASH("Nitrous Oxide Icebox")
+define Pipe         HASH("NitrousOxidePipeNetwork")
+define NitrogenPipe HASH("NitrogenPipeNetwork")
+define WastePipe    HASH("WastePipeNetwork")
+
+# Devices
+alias Filtration db
+alias IceboxActivator d0 # Switch
+alias Thermostat d1      # Memory
+
+main:
+  move r15 0
+  # Check filter life
+  ls r0 Filtration 0 Quantity
+  ls r1 Filtration 1 Quantity
+  add r14 r0 r1
+  beqz r14 flushFiltration
+  # Check pipe pressure 
+  l r0 Filtration PressureInput
+  l r1 Filtration RatioNitrousOxideInput
+  l r2 Filtration PressureOutput
+  l r3 Filtration PressureOutput2
+  beqz r0 flushFiltration
+  select r2 r1 r2 0
+  bge r2 NitrousOxideMaxPressure flushFiltration
+  bge r3 MaxPressure flushFiltration 
+  move r15 1
+flushFiltration:
+  s db Mode r15
+
+  # Monitor waste pipe
+  l r0 Filtration TotalMolesOutput2
+  lbn r1 PipeAnalyzer WastePipe Pressure Average
+  lbn r2 PipeAnalyzer WastePipe TotalMoles Average
+  lbn r3 PipeAnalyzer WastePipe RatioPollutant Average
+  lbn r4 PipeAnalyzer WastePipe RatioLiquidPollutant Average
+  lbn r5 PipeAnalyzer WastePipe Volume Average
+  move r15 0
+  beqz r0 flushWastePipe
+  bge r1 MaxPressure flushWastePipe
+  add r14 r3 r4
+  select r14 r2 r14 1
+  beqz r14 flushWastePipe
+  sub r14 1 r14
+  mul r14 r14 r2 # Current non-pollutant moles in the waste pipe
+  div r13 PollutantCondPressure PollutantCondTemperature
+  div r13 r13 IdealGasConstant
+  mul r13 r13 r5 # Target moles needed to reach condensation
+  slt r15 r14 r13
+flushWastePipe:
+  sbn VolumePump WastePipe r15
+  
+  # Monitor the temperature
+  l r0 Thermostat Setting
+  l r1 Filtration TemperatureOutput
+  sgt r15 r1 r0
+  seqz r14 r15
+  sbn CoolValve Pipe On r15
+  sbn CoolPump Pipe On r14
+
+  # Monitor the pipe
+  sbn ActiveVent Pipe Mode 1 # Inward
+  sbn ActiveVent Pipe PressureInternal NitrousOxideMaxPressure
+  sbn ActiveVent NitrogenPipe Mode 1
+  sbn ActiveVent NitrogenPipe PressureInternal MaxPressure
+
+  l r0 IceboxActivator Setting
+  lbn r1 GasSensor Icebox TotalMoles Average
+  lbn r2 GasSensor Icebox RatioNitrousOxide Average
+  lbn r3 GasSensor Icebox RatioNitrogen Average
+  lbn r4 PipeAnalyzer NitrogenPipe RatioNitrogen Average
+
+  # Turn on N2O vent when only N2O is present
+  floor r15 r2
+  select r15 r0 0 r15
+  sbn ActiveVent Pipe On r15
+
+  # Turn on N vent when nitrogen is present
+  ceil r14 r3
+  select r14 r0 0 r14
+  sbn ActiveVent NitrogenPipe On r14
+
+  # Turn on N pump when only nitrogen is present and vent off
+  floor r13 r4
+  select r13 r14 0 r13
+  sbn VolumePump NitrogenPipe On r13
+
+  # Turn on activator when vent off and no gas present
+  bnez r0 done
+  bnez r15 done
+  bnez r14 done
+  seqz r12 r1
+  s Activator Open r12
+
+done:
+  yield
+  j main
