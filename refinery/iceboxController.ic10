@@ -63,10 +63,11 @@ main:
 
   # Reset
   bnez r14 done
-  sbn Stacker r0 ClearMemory 1
   s Activator Open 0
 
 reset:
+  sgtz r15 r8
+  sbn Stacker r0 ClearMemory r15
   s db Setting r6
 
 done:
