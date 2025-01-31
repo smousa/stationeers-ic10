@@ -66,9 +66,9 @@ main:
   s Activator Open 0
 
 reset:
-  sgtz r15 r8
-  sbn Stacker r0 ClearMemory r15
   s db Setting r6
+  bgtz r8 done
+  sbn Stacker r0 ClearMemory 1
 
 done:
   yield
