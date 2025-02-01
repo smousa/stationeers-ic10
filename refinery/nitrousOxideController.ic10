@@ -88,6 +88,7 @@ flushWastePipe:
   lbn r3 GasSensor Icebox RatioNitrogen Average
   lbn r4 PipeAnalyzer NitrogenPipe RatioNitrogen Average
   lbn r5 PipeAnalyzer SteamPipe Pressure Average
+  lbn r6 ActiveVent SteamPipe PressureInternal Average 
 
   # Turn on N2O vent when only N2O is present
   floor r15 r2
@@ -100,8 +101,8 @@ flushWastePipe:
   sbn ActiveVent NitrogenPipe On r14
 
   # Turn on N pump when only nitrogen is present and vent off
-  floor r13 r4           # Nitrogen Ratio
-  slt r12 r5 MaxPressure # Output Pressure
+  floor r13 r4  # Nitrogen Ratio
+  slt r12 r5 r6 # Output Pressure
   and r13 r13 r14
   and r13 r13 r12
   sbn VolumePump NitrogenPipe On r13
