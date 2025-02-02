@@ -2,10 +2,6 @@
 define MaxPressure 51675.75
 define NitrousOxideMaxPressure 680
 
-define PollutantCondPressure 6000
-define PollutantCondTemp     425
-define IdealGasConstant      8.314
-
 # Structures
 define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
@@ -19,7 +15,6 @@ define Icebox       HASH("Nitrous Oxide Icebox")
 define Pipe         HASH("NitrousOxidePipeNetwork")
 define NitrogenPipe HASH("NitrogenPipeNetwork")
 define SteamPipe    HASH("SteamPipeNetwork")
-define WastePipe    HASH("WastePipeNetwork")
 
 # Devices
 alias Filtration db
@@ -45,28 +40,6 @@ main:
   move r15 1
 flushFiltration:
   s db Mode r15
-
-  # Monitor waste pipe
-  l r0 Filtration TotalMolesOutput2
-  lbn r1 PipeAnalyzer WastePipe Pressure Average
-  lbn r2 PipeAnalyzer WastePipe TotalMoles Average
-  lbn r3 PipeAnalyzer WastePipe RatioPollutant Average
-  lbn r4 PipeAnalyzer WastePipe RatioLiquidPollutant Average
-  lbn r5 PipeAnalyzer WastePipe Volume Average
-  move r15 0
-  beqz r0 flushWastePipe
-  bge r1 MaxPressure flushWastePipe
-  add r14 r3 r4
-  select r14 r2 r14 1
-  beqz r14 flushWastePipe
-  sub r14 1 r14
-  mul r14 r14 r2 # Current non-pollutant moles in the waste pipe
-  div r13 PollutantCondPressure PollutantCondTemperature
-  div r13 r13 IdealGasConstant
-  mul r13 r13 r5 # Target moles needed to reach condensation
-  slt r15 r14 r13
-flushWastePipe:
-  sbn VolumePump WastePipe r15
   
   # Monitor the temperature
   l r0 Thermostat Setting
