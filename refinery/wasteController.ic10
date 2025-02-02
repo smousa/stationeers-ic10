@@ -1,0 +1,101 @@
+# Configuration
+define PollutantSpecificHeat     24.8
+define CarbonDioxideSpecificHeat 28.2
+define NitrogenSpecificHeat      20.6
+define OxygenSpecificHeat        21.1
+define WaterSpecificHeat         72
+
+define MaxPressure             51675.75
+define CondensationPressure    4512.6
+define CondensationTemperature 350
+define IdealGasConstant        8.314
+
+# Structures
+define GasSensor    HASH("StructureGasSensor")
+define PipeAnalyzer HASH("StructurePipeAnalysizer")
+define VolumePump   HASH("StructureVolumePump")
+
+# Networks
+define Icebox          HASH("Water Icebox")
+define WastePipeInput  HASH("WastePipeInputNetwork")
+define WastePipeOutput HASH("WastePipeOutputNetwork")
+
+# Devices
+alias FiltrationInput  d0
+alias FiltrationOutput d1
+alias WasteTemperature d2
+alias WaterTemperature d3
+
+main:
+  # Calculate specific heat
+  l r0 FiltrationInput RatioPollutantOutput2
+  l r1 FiltrationInput RatioCarbonDioxideOuput2
+  l r2 FiltrationInput RatioNitrogenOutput2
+  l r3 FiltrationInput RatioOxygenOutput2
+  mul r15 r0 PollutantSpecificHeat
+  mul r14 r1 CarbonDioxideSpecificHeat
+  add r15 r15 r14
+  mul r14 r2 NitrogenSpecificHeat
+  add r15 r15 r14
+  mul r14 r3 OxygenSpecificHeat
+  add r15 r15 r14 # Specific Heat
+
+  # Calculate Target Moles
+  lbn r1 PipeAnalyzer WastePipeInput Volume Average
+  mul r14 r1 CondensationPressure
+  div r14 r14 CondensationTemperature
+  div r14 r14 IdealGasConstant # Target Moles
+
+  # Calculate Energy needed to reach target temperature
+  l r1 FiltrationInput TemperatureOutput2
+  l r2 WasteTemperature Setting
+  sub r13 1 r0
+  div r13 r14 r13 # Total Moles
+  sub r12 r1 r2
+  mul r13 r13 r12
+  mul r13 r13 r15 # Joules
+
+  # Calculate Water needed to cool gas to target
+  l r3 WaterTemperature Setting
+  div r12 r13 WaterSpecificHeat
+  sub r11 r2 r3
+  div r12 r12 r11 # Water Moles
+  s db Setting r12
+
+  # Input Pump Settings
+  l r0 FiltrationInput TotalMolesOutput2
+  lbn r1 PipeAnalyzer WastePipeInput Pressure Average
+  lbn r2 PipeAnalyzer WastePipeInput RatioPollutant Average
+  lbn r3 PipeAnalyzer WastePipeInput RatioLiquidPollutant Average
+  lbn r4 PipeAnalyzer WastePipeInput TotalMoles Average
+  lbn r5 GasSensor Icebox Temperature Average
+  lbn r6 GasSensor Icebox RatioNitrogen Average
+  lbn r7 GasSensor Icebox TotalMoles Average
+
+  add r11 r2 r3 
+  select r11 r4 r11 1 # Ratio [Liquid] Pollutant
+  move r15 0
+  beqz r0 flushWasteInputPump
+  bge r1 MaxPressure flushWasteInputPump
+  bgt r4 MinTemperature flushWasteInputPump
+  sub r10 1 r11
+  mul r10 r10 r4
+  bge r10 r14 flushWasteInputPump # Target Moles (Waste)
+  sub r10 1 r6
+  mul r10 r10 r7
+  blt r10 r12 flushWasteInputPump # Target Moles (Water)
+  ceil r15 r11
+flushWasteInputPump:
+  sbn VolumePump WastePipeInput On r15
+
+  # Output Pump Settings
+  l r0 FiltrationOutput PressureInput
+  lbn r1 PipeAnalyzer Temperature Average
+
+  move r14 0
+  bge r0 MaxPressure flushWasteOutputPump
+  bgt r1 MaxTemperature flushWasteOuputPump
+  bnez r11 flushWasteOutputPump
+  seqz r14 r15
+flushWasteOutputPump:
+  sbn VolumePump WastePipeOutput On r14
