@@ -99,3 +99,6 @@ flushWasteInputPump:
   seqz r14 r15
 flushWasteOutputPump:
   sbn VolumePump WastePipeOutput On r14
+
+  yield
+  j main
