@@ -17,52 +17,36 @@ alias Activator  d0 # Switch
 alias Thermostat d1 # Memory
 
 main:
+  l r0 Activator Setting
+  l r1 Thermostat Setting
+  lbn r2 GasSensor Icebox TotalMoles Average 
+  lbn r3 PipeAnalyzer Pipe Pressure Average 
+  lbn r4 PipeAnalyzer Pipe Temperature Average 
+
+
+  # Vent
   move r15 0
-
-  # Check filter life
-  ls r0 Filtration 0 Quantity
-  ls r1 Filtration 1 Quantity
-  add r14 r0 r1
-  beqz r14 flushFiltration
-
-  # Check pipe pressure 
-  l r0 Filtration PressureInput
-  l r1 Filtration RatioVolatilesInput
-  l r2 Filtration PressureOutput
-  l r3 Filtration PressureOutput2
-  beqz r0 flushFiltration
-  select r2 r1 r2 0
-  bge r2 MaxPressure flushFiltration
-  bge r3 MaxPressure flushFiltration 
-  move r15 1
-
-flushFiltration:
-  s db Mode r15
-
-  # Monitor the temperature
-  l r0 Thermostat Setting
-  l r1 Filtration TemperatureOutput
-  sgt r15 r1 r0
-  seqz r14 r15
-  sbn CoolValve Pipe On r15
-  sbn CoolPump Pipe On r14
-
-  # Monitor the pipe
+  bnez r0 flushVent
+  beqz r2 flushVent
+  slt r15 r3 MaxPressure
+flushVent:
   sbn ActiveVent Pipe Mode 1 # Inward
   sbn ActiveVent Pipe PressureInternal MaxPressure
+  sbn ActiveVent Pipe On R15
 
-  l r0 Activator Setting
-  lbn r1 GasSensor Icebox TotalMoles Average
+  # Cooler
+  sgt r14 r4 r1
+  seqz r13 r14
+  sbn CoolValve Pipe On r14
+  sbn CoolPump  Pipe On r13
 
-  # Turn vent on when the activator is off and gas is present
-  select r15 r0 0 r1
-  sgtz r15 r15
-  sbn ActiveVent Pipe On r15
-
-  # Turn the activator on when the vent is off and no gas is present
+  # Activator
+  seqz r12 r0
+  s Activator Lock r12
   bnez r0 done
-  seqz r15 r15
-  s Activator Open r15
+  bnez r15 done
+  bnez r2 done
+  s Activator Open 1
 
 done:
   yield
