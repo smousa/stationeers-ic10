@@ -21,10 +21,11 @@ define WastePipeInput  HASH("WastePipeInputNetwork")
 define WastePipeOutput HASH("WastePipeOutputNetwork")
 
 # Devices
-alias FiltrationInput  d0
-alias FiltrationOutput d1
-alias WasteTemperature d2
-alias WaterTemperature d3
+alias FiltrationInput  db
+alias FiltrationOutput d0
+alias WasteTemperature d1 # Memory
+alias WaterTemperature d2 # Memory
+alias WaterVolume      d3 # Memory
 
 main:
   # Calculate specific heat
@@ -57,10 +58,12 @@ main:
 
   # Calculate Water needed to cool gas to target
   l r3 WaterTemperature Setting
+  l r4 WaterVolume Setting
   div r12 r13 WaterSpecificHeat
   sub r11 r2 r3
-  div r12 r12 r11 # Water Moles
-  s db Setting r12
+  div r12 r12 r11 
+  max r12 r12 r4 # Water Moles
+  s WaterVolume Setting r12
 
   # Input Pump Settings
   l r0 FiltrationInput TotalMolesOutput2
