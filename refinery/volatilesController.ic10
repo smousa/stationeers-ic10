@@ -20,8 +20,8 @@ main:
   l r0 Activator Setting
   l r1 Thermostat Setting
   lbn r2 GasSensor Icebox TotalMoles Average 
-  lbn r3 PipeAnalyzer Pipe Pressure Average 
-  lbn r4 PipeAnalyzer Pipe Temperature Average 
+  l r3 Filtration PressureOutput
+  l r4 Filtration TemperatureOutput
 
 
   # Vent
