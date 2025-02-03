@@ -1,0 +1,77 @@
+# Configuration
+define MaxPressure 51675.75
+
+# Structures
+define GasSensor          HASH("StructureGasSensor")
+define PipeAnalyzer       HASH("StructurePipeAnalysizer")
+define ActiveVent         HASH("StructureActiveVent")
+define Regulator          HASH("StructureBackPressureRegulator")
+define LiquidRegulator    HASH("StructureLiquidPressureRegulator")
+define CoolPump           HASH("StructureVolumePump")
+define CoolValve          HASH("StructureDigitalValve")
+
+# Networks
+define Icebox    HASH("Water Icebox")
+define Pipe      HASH("WaterPipeNetwork")
+
+# Devices
+alias Filtration       db
+alias IceboxActivator  d0 # Switch
+alias Thermostat       d1 # Memory
+alias WaterVolume      d2 # Memory
+
+main:
+  l r0 IceboxActivator Setting
+  l r1 Thermostat Setting
+  l r2 WaterVolume Setting
+  lbn r3 GasSensor Icebox RatioNitrogen Average
+  lbn r4 GasSensor Icebox Temperature Average
+  lbn r5 GasSensor Icebox TotalMoles Average
+  lbn r6 PipeAnalyzer Pipe RatioNitrogen Average
+  lbn r7 PipeAnalyzer Pipe Temperature Average
+  lbn r8 Filtration PressureInput
+  
+  # Steam Vent
+  move r15 0
+  bnez r0 flushActiveVent
+  bgtz r3 flushActiveVent
+  sgt r15 r4 r1
+flushActiveVent:
+  sbn ActiveVent Pipe Mode 1 # Inward
+  sbn ActiveVent Pipe PressureInternal MaxPressure
+  sbn ActiveVent Pipe On r15
+
+  # Water Regulator
+  move r14 0
+  bnez r0 flushLiquidRegulator
+  bgtz r3 flushLiquidRegulator
+  sgt r14 r5 r2
+flushLiquidRegulator:
+  sbn LiquidRegulator Pipe On r14
+
+  # Regulator
+  move r13 0
+  bnez r15 flushRegulator
+  blt r6 1 flushRegulator
+  slt r13 r8 MaxPressure
+flushRegulator:
+  sbn Regulator Pipe On r13
+
+  # Cooler
+  sgt r12 r7 r1
+  seqz r11 r12
+  sbn CoolValve Pipe On r12
+  sbn CoolPump Pipe On r11
+  
+  # Activator
+  seqz r10 r0
+  s Activator Lock r10
+  bnez r0 done
+  bnez r15 done
+  bnez r14 done
+  blt r6 1 done
+  s Activator Open 1
+
+done:
+  yield
+  j main
