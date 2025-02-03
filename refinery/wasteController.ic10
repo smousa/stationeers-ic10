@@ -24,9 +24,9 @@ define Pipe      HASH("WastePipeNetwork")
 # Devices
 alias FiltrationOutput db
 alias FiltrationInput  d0
-alias WasteTemperature d1 # Memory
-alias WaterTemperature d2 # Memory
-alias WaterVolume      d3 # Memory
+alias WasteThermostat  d1 # Memory
+alias WaterThermostat  d2 # Memory
+alias WaterMass        d3 # Memory
 
 main:
   # Calculate specific heat
@@ -47,62 +47,63 @@ main:
   mul r14 r1 CondensationPressure
   div r14 r14 CondensationTemperature
   div r14 r14 IdealGasConstant # Target Moles
-
-  # Calculate Energy needed to reach target temperature
-  l r1 FiltrationInput TemperatureOutput2
-  l r2 WasteTemperature Setting
   sub r13 1 r0
   div r13 r14 r13 # Total Moles
-  sub r12 r1 r2
+
+  l r0 WasteThermostat Setting
+  l r1 WaterThermostat Setting
+
+  # Calculate Energy needed to reach target temperature
+  l r2 FiltrationInput TemperatureOutput2
+  sub r12 r2 r0
   mul r13 r13 r12
   mul r13 r13 r15 # Joules
 
   # Calculate Water needed to cool gas to target
-  l r3 WaterTemperature Setting
-  l r4 WaterVolume Setting
+  l r3 WaterVolume Setting
   div r12 r13 WaterSpecificHeat
-  sub r11 r2 r3
+  sub r11 r1 r0
   div r12 r12 r11 
-  max r12 r12 r4 # Water Moles
+  max r12 r12 r3 # Water Moles
   s WaterVolume Setting r12
 
   # Input Pump Settings
-  l r0 FiltrationInput TotalMolesOutput2
-  lbn r1 PipeAnalyzer Pipe Pressure Average
-  lbn r2 PipeAnalyzer Pipe RatioPollutant Average
-  lbn r3 PipeAnalyzer Pipe RatioLiquidPollutant Average
-  lbn r4 PipeAnalyzer Pipe TotalMoles Average
-  lbn r5 GasSensor Icebox Temperature Average
-  lbn r6 GasSensor Icebox RatioNitrogen Average
-  lbn r7 GasSensor Icebox TotalMoles Average
+  l r2 FiltrationInput TotalMolesOutput2
+  lbn r3 PipeAnalyzer Pipe Pressure Average
+  lbn r4 PipeAnalyzer Pipe RatioPollutant Average
+  lbn r5 PipeAnalyzer Pipe RatioLiquidPollutant Average
+  lbn r6 PipeAnalyzer Pipe TotalMoles Average
+  lbn r7 GasSensor Icebox Temperature Average
+  lbn r8 GasSensor Icebox RatioNitrogen Average
+  lbn r9 GasSensor Icebox TotalMoles Average
 
-  add r11 r2 r3 
-  select r11 r4 r11 1 # Ratio [Liquid] Pollutant
+  add r11 r4 r5 
+  select r11 r6 r11 1 # Ratio [Liquid] Pollutant
   move r15 0
-  beqz r0 flushPump
-  bge r1 MaxPressure flushPump
-  bgt r4 MinTemperature flushPump
+  beqz r2 flushPump
+  bge r3 MaxPressure flushPump
+  bgt r7 r1 flushPump
   sub r10 1 r11
-  mul r10 r10 r4
+  mul r10 r10 r6
   bge r10 r14 flushPump # Target Moles (Waste)
-  sub r10 1 r6
-  mul r10 r10 r7
+  sub r10 1 r8
+  mul r10 r10 r9
   blt r10 r12 flushPump # Target Moles (Water)
   ceil r15 r11
 flushPump:
   sbn VolumePump Pipe On r15
 
   # Output Regulator Settings
-  l r0 FiltrationOutput PressureInput
-  l r1 FiltrationOutput RatioCarbonDioxideInput
-  lbn r2 PipeAnalyzer Temperature Average
+  l r2 FiltrationOutput PressureInput
+  l r3 FiltrationOutput RatioCarbonDioxideInput
+  lbn r4 PipeAnalyzer Pipe Temperature Average
 
   move r14 0
-  bge r0 MaxPressure flushRegulator
-  bge r1 TargetRatio flushRegulator
-  bgt r2 MaxTemperature flushRegulator
-  bnez r11 flushRegulator
-  seqz r14 r15
+  bnez r15 flushRegulator
+  bge r2 MaxPressure flushRegulator
+  bge r3 TargetRatio flushRegulator
+  bgt r4 r0 flushRegulator
+  seqz r14 r11
 flushRegulator:
   sbn Regulator WastePipeOutput On r14
 
