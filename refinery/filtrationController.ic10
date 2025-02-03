@@ -1,8 +1,10 @@
 # Configuration 
 define MaxPressure 51675.75
+define TargetRatio 0.33
 
 # Structures
 define Filtration HASH("StructureFiltration")
+define ActiveVent HASH("StructureActiveVent")
 
 # Networks
 define VolatilesPipe HASH("VolatilesPipeNetwork")
@@ -11,8 +13,83 @@ define CarbonDioxidePipe HASH("CarbonDioxidePipeNetwork")
 define NitrogenPipe HASH("NitrogenPipeNetwork")
 define OxygenPipe HASH("OxygenPipeNetwork")
 
+alias Network r0
+alias RatioGas r1
+
 main:
+
+  # Volatiles
+  push LogicType.RatioVolatilesInput
+  push VolatilesPipe
+  jal wasteIn
+
+  # Nitrous Oxide
+  push LogicType.RatioNitrousOxideInput
+  push NitrousOxidePipe
+  jal wasteIn
+
+  # Carbon Dioxide
+  push LogicType.RatioCarbonDioxideInput
+  push CarbonDioxidePipe
+  jal wasteOut
+
+  # Nitrogen
+  push LogicType.RatioNitrogenInput
+  push NitrogenPipe
+  jal wasteOut
   
+  # Oxygen
+  push LogicType.RatioOxygenInput
+  push OxygenPipe
+  jal wasteOut
 
   yield
   j main
+
+wasteIn:
+  pop Network
+  pop RatioGas
+
+  move r15 0
+
+  # Check filter life
+  lbns r2 Filtration Network 0 Quantity Minimum 
+  lbns r3 Filtration Network 1 Quantity Minimum 
+  add r14 r2 r3
+  beqz r14 flush
+
+  # Check Pressure
+  lbn r2 Filtration Network PressureInput Average
+  lbn r3 Filtration Network RatioGas Average
+  lbn r4 Filtration Network PressureOutput Average
+  lbn r5 ActiveVent Network PressureInternal Average
+  lbn r6 Filtration Network PressureOutput2
+Average
+  beqz r2 flush
+  bge r6 MaxPressure flush
+  select r4 r3 r4 0
+  slt r15 r4 r5
+
+wasteOut:
+  pop Network
+  pop RatioGas
+
+  move r15 0
+
+  # Check filter life
+  lbns r2 Filtration Network 0 Quantity Minimum 
+  lbns r3 Filtration Network 1 Quantity Minimum 
+  add r14 r2 r3
+  beqz r14 flush 
+
+  # Check Pressure
+  lbn r2 Filtration Network PressureInput Average
+  lbn r3 Filtration Network RatioGas Average
+  lbn r4 Filtration Network PressureOutput Average
+  beqz r2 flush
+  bge r4 MaxPressure flush
+  slt r15 r3 TargetRatio
+
+flush:
+  sbn Filtration Network Mode r15
+  j ra
