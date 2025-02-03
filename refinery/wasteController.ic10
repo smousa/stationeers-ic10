@@ -6,6 +6,7 @@ define OxygenSpecificHeat        21.1
 define WaterSpecificHeat         72
 
 define MaxPressure             51675.75
+define TargetRatio             0.33
 define CondensationPressure    4512.6
 define CondensationTemperature 350
 define IdealGasConstant        8.314
@@ -93,11 +94,13 @@ flushPump:
 
   # Output Regulator Settings
   l r0 FiltrationOutput PressureInput
-  lbn r1 PipeAnalyzer Temperature Average
+  l r1 FiltrationOutput RatioCarbonDioxideInput
+  lbn r2 PipeAnalyzer Temperature Average
 
   move r14 0
   bge r0 MaxPressure flushRegulator
-  bgt r1 MaxTemperature flushRegulator
+  bge r1 TargetRatio flushRegulator
+  bgt r2 MaxTemperature flushRegulator
   bnez r11 flushRegulator
   seqz r14 r15
 flushRegulator:
