@@ -1,92 +1,84 @@
 # Configuration
 define MaxPressure 51675.75
 define NitrousOxideMaxPressure 680
+define TargetRatio 0.33
 
 # Structures
 define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define ActiveVent   HASH("StructureActiveVent")
-define VolumePump   HASH("StructureVolumePump")
+define Regulator    HASH("StructureBackPressureRegulator")
 define CoolPump     HASH("StructureVolumePump")
 define CoolValve    HASH("StructureDigitalValve")
 
 # Networks
-define Icebox       HASH("Nitrous Oxide Icebox")
+define Icebox       HASH("Nitrice Icebox")
 define Pipe         HASH("NitrousOxidePipeNetwork")
-define NitrogenPipe HASH("NitrogenPipeNetwork")
-define SteamPipe    HASH("SteamPipeNetwork")
+define WastePipe    HASH("NitricePipeNetwork")
 
 # Devices
-alias Filtration db
-alias IceboxActivator d0 # Switch
-alias Thermostat d1      # Memory
+alias FiltrationInput  db
+alias FiltrationOutput d0
+alias Activator        d1 # Switch
+alias Thermostat       d2 # Memory
 
 main:
-  move r15 0
-  # Check filter life
-  ls r0 Filtration 0 Quantity
-  ls r1 Filtration 1 Quantity
-  add r14 r0 r1
-  beqz r14 flushFiltration
-  # Check pipe pressure 
-  l r0 Filtration PressureInput
-  l r1 Filtration RatioNitrousOxideInput
-  l r2 Filtration PressureOutput
-  l r3 Filtration PressureOutput2
-  beqz r0 flushFiltration
-  select r2 r1 r2 0
-  bge r2 NitrousOxideMaxPressure flushFiltration
-  bge r3 MaxPressure flushFiltration 
-  move r15 1
-flushFiltration:
-  s db Mode r15
-  
-  # Monitor the temperature
-  l r0 Thermostat Setting
-  l r1 Filtration TemperatureOutput
-  sgt r15 r1 r0
-  seqz r14 r15
-  sbn CoolValve Pipe On r15
-  sbn CoolPump Pipe On r14
-
-  # Monitor the pipe
-  sbn ActiveVent Pipe Mode 1 # Inward
-  sbn ActiveVent Pipe PressureInternal NitrousOxideMaxPressure
-  sbn ActiveVent NitrogenPipe Mode 1
-  sbn ActiveVent NitrogenPipe PressureInternal MaxPressure
-
-  l r0 IceboxActivator Setting
-  lbn r1 GasSensor Icebox TotalMoles Average
+  l r0 Activator Setting
+  l r1 Thermostat Setting
   lbn r2 GasSensor Icebox RatioNitrousOxide Average
   lbn r3 GasSensor Icebox RatioNitrogen Average
-  lbn r4 PipeAnalyzer NitrogenPipe RatioNitrogen Average
-  lbn r5 PipeAnalyzer SteamPipe Pressure Average
-  lbn r6 ActiveVent SteamPipe PressureInternal Average 
+  lbn r4 GasSensor Icebox TotalMoles Average
+  l r5 FiltrationInput PressureOutput
+  l r6 FiltrationInput TemperatureOutput
+  lbn r7 PipeAnalyzer WastePipe Pressure Average
+  lbn r8 PipeAnalyzer WastePipe RatioNitrogen Average
+  l r9 FiltrationOutput Pressure
+  l r10 FiltrationOutput RatioNitrogen
 
-  # Turn on N2O vent when only N2O is present
+  # Pipe Vent
+  move r15 0
+  bnez r0 flushPipeVent
+  bge r5 NitrousOxideMaxPressure flushPipeVent
   floor r15 r2
-  select r15 r0 0 r15
+flushPipeVent:
+  sbn ActiveVent Pipe Mode 1 # Inward
+  sbn ActiveVent Pipe PressureInternal NitrousOxideMaxPressure
   sbn ActiveVent Pipe On r15
 
-  # Turn on N vent when nitrogen is present
+  # Pipe Cooler
+  sgt r14 r6 r1
+  seqz r13 r14
+  sbn CoolValve Pipe On r14
+  sbn CoolPump Pipe On r13
+
+  # Waste Vent
+  move r14 0
+  bnez r0 flushWasteVent
+  bgt r7 MaxPressure flushWasteVent
   ceil r14 r3
-  select r14 r0 0 r14
-  sbn ActiveVent NitrogenPipe On r14
+flushWasteVent:
+  sbn ActiveVent Pipe Mode 1 # Inward
+  sbn ActiveVent Pipe PressureInternal MaxPressure
+  sbn ActiveVent Pipe On r14
 
-  # Turn on N pump when only nitrogen is present and vent off
-  floor r13 r4  # Nitrogen Ratio
-  slt r12 r5 r6 # Output Pressure
-  and r13 r13 r14
-  and r13 r13 r12
-  sbn VolumePump NitrogenPipe On r13
+  # Waste Regulator
+  move r13 0
+  bnez r14 flushWasteRegulator
+  bgt r9 MaxPressure flushWasteRegulator
+  bgt r10 TargetRatio flushWasteRegulator
+  floor r13 r8
+flushWasteRegulator:
+  sbn Regulator WastePipe On r13
 
-  # Turn on activator when vent off and no gas present
+  # Activator
+  seqz r12 r0
+  s Activator Lock r12
   bnez r0 done
   bnez r15 done
   bnez r14 done
-  seqz r12 r1
-  s Activator Open r12
-
+  bnez r4 done
+  s Activator Open 1
+  
 done:
   yield
   j main
