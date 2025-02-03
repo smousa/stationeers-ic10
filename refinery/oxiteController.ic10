@@ -15,12 +15,12 @@ define Icebox HASH("Oxite Icebox")
 define Pipe   HASH("OxitePipeNetwork")
 
 # Devices
-alias Filtration      db
-alias IceboxActivator d0 # Switch
-alias Thermostat      d1 # Memory
+alias Filtration db
+alias Activator  d0 # Switch
+alias Thermostat d1 # Memory
 
 main:
-  l r0 IceboxActivator Setting
+  l r0 Activator Setting
   l r1 Thermostat Setting
   lbn r2 GasSensor Icebox TotalMoles Average
   l r3 Filtration PressureInput
