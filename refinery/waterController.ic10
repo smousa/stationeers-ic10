@@ -16,12 +16,12 @@ define Pipe      HASH("WaterPipeNetwork")
 
 # Devices
 alias Filtration       db
-alias IceboxActivator  d0 # Switch
+alias Activator        d0 # Switch
 alias Thermostat       d1 # Memory
 alias WaterMass        d2 # Memory
 
 main:
-  l r0 IceboxActivator Setting
+  l r0 Activator Setting
   l r1 Thermostat Setting
   l r2 WaterMass Setting
   lbn r3 GasSensor Icebox RatioNitrogen Average
