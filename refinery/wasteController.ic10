@@ -14,15 +14,15 @@ define IdealGasConstant        8.314
 define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define VolumePump   HASH("StructureVolumePump")
+define Regulator    HASH("StructureBackPressureRegulator")
 
 # Networks
-define Icebox          HASH("Water Icebox")
-define WastePipeInput  HASH("WastePipeInputNetwork")
-define WastePipeOutput HASH("WastePipeOutputNetwork")
+define Icebox    HASH("Water Icebox")
+define Pipe      HASH("WastePipeNetwork")
 
 # Devices
-alias FiltrationInput  db
-alias FiltrationOutput d0
+alias FiltrationOutput db
+alias FiltrationInput  d0
 alias WasteTemperature d1 # Memory
 alias WaterTemperature d2 # Memory
 alias WaterVolume      d3 # Memory
@@ -42,7 +42,7 @@ main:
   add r15 r15 r14 # Specific Heat
 
   # Calculate Target Moles
-  lbn r1 PipeAnalyzer WastePipeInput Volume Average
+  lbn r1 PipeAnalyzer Pipe Volume Average
   mul r14 r1 CondensationPressure
   div r14 r14 CondensationTemperature
   div r14 r14 IdealGasConstant # Target Moles
@@ -67,10 +67,10 @@ main:
 
   # Input Pump Settings
   l r0 FiltrationInput TotalMolesOutput2
-  lbn r1 PipeAnalyzer WastePipeInput Pressure Average
-  lbn r2 PipeAnalyzer WastePipeInput RatioPollutant Average
-  lbn r3 PipeAnalyzer WastePipeInput RatioLiquidPollutant Average
-  lbn r4 PipeAnalyzer WastePipeInput TotalMoles Average
+  lbn r1 PipeAnalyzer Pipe Pressure Average
+  lbn r2 PipeAnalyzer Pipe RatioPollutant Average
+  lbn r3 PipeAnalyzer Pipe RatioLiquidPollutant Average
+  lbn r4 PipeAnalyzer Pipe TotalMoles Average
   lbn r5 GasSensor Icebox Temperature Average
   lbn r6 GasSensor Icebox RatioNitrogen Average
   lbn r7 GasSensor Icebox TotalMoles Average
@@ -78,30 +78,30 @@ main:
   add r11 r2 r3 
   select r11 r4 r11 1 # Ratio [Liquid] Pollutant
   move r15 0
-  beqz r0 flushWasteInputPump
-  bge r1 MaxPressure flushWasteInputPump
-  bgt r4 MinTemperature flushWasteInputPump
+  beqz r0 flushPump
+  bge r1 MaxPressure flushPump
+  bgt r4 MinTemperature flushPump
   sub r10 1 r11
   mul r10 r10 r4
-  bge r10 r14 flushWasteInputPump # Target Moles (Waste)
+  bge r10 r14 flushPump # Target Moles (Waste)
   sub r10 1 r6
   mul r10 r10 r7
-  blt r10 r12 flushWasteInputPump # Target Moles (Water)
+  blt r10 r12 flushPump # Target Moles (Water)
   ceil r15 r11
-flushWasteInputPump:
-  sbn VolumePump WastePipeInput On r15
+flushPump:
+  sbn VolumePump Pipe On r15
 
-  # Output Pump Settings
+  # Output Regulator Settings
   l r0 FiltrationOutput PressureInput
   lbn r1 PipeAnalyzer Temperature Average
 
   move r14 0
-  bge r0 MaxPressure flushWasteOutputPump
-  bgt r1 MaxTemperature flushWasteOuputPump
-  bnez r11 flushWasteOutputPump
+  bge r0 MaxPressure flushRegulator
+  bgt r1 MaxTemperature flushRegulator
+  bnez r11 flushRegulator
   seqz r14 r15
-flushWasteOutputPump:
-  sbn VolumePump WastePipeOutput On r14
+flushRegulator:
+  sbn Regulator WastePipeOutput On r14
 
   yield
   j main
