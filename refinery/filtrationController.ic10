@@ -1,6 +1,5 @@
 # Configuration 
 define MaxPressure 51675.75
-define TargetRatio 0.33
 
 # Structures
 define Filtration HASH("StructureFiltration")
@@ -87,7 +86,7 @@ wasteOut:
   lbn r4 Filtration Network PressureOutput Average
   beqz r2 flush
   bge r4 MaxPressure flush
-  slt r15 r3 TargetRatio
+  sgtz r15 r3
 
 flush:
   sbn Filtration Network Mode r15
