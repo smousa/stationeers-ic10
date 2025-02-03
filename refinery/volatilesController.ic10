@@ -23,7 +23,6 @@ main:
   l r3 Filtration PressureOutput
   l r4 Filtration TemperatureOutput
 
-
   # Vent
   move r15 0
   bnez r0 flushVent
