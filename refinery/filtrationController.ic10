@@ -1,0 +1,18 @@
+# Configuration 
+define MaxPressure 51675.75
+
+# Structures
+define Filtration HASH("StructureFiltration")
+
+# Networks
+define VolatilesPipe HASH("VolatilesPipeNetwork")
+define NitrousOxidePipe HASH("NitrousOxidePipeNetwork")
+define CarbonDioxidePipe HASH("CarbonDioxidePipeNetwork")
+define NitrogenPipe HASH("NitrogenPipeNetwork")
+define OxygenPipe HASH("OxygenPipeNetwork")
+
+main:
+  
+
+  yield
+  j main
