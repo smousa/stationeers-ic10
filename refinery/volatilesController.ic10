@@ -31,7 +31,7 @@ main:
 flushVent:
   sbn ActiveVent Pipe Mode 1 # Inward
   sbn ActiveVent Pipe PressureInternal MaxPressure
-  sbn ActiveVent Pipe On R15
+  sbn ActiveVent Pipe On r15
 
   # Cooler
   sgt r14 r4 r1
