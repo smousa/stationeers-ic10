@@ -7,13 +7,13 @@ define Filtration HASH("StructureFiltration")
 define ActiveVent HASH("StructureActiveVent")
 
 # Networks
-define VolatilesPipe HASH("VolatilesPipeNetwork")
-define NitrousOxidePipe HASH("NitrousOxidePipeNetwork")
+define VolatilesPipe     HASH("VolatilesPipeNetwork")
+define NitrousOxidePipe  HASH("NitrousOxidePipeNetwork")
 define CarbonDioxidePipe HASH("CarbonDioxidePipeNetwork")
-define NitrogenPipe HASH("NitrogenPipeNetwork")
-define OxygenPipe HASH("OxygenPipeNetwork")
+define NitrogenPipe      HASH("NitrogenPipeNetwork")
+define OxygenPipe        HASH("OxygenPipeNetwork")
 
-alias Network r0
+alias Network  r0
 alias RatioGas r1
 
 main:
@@ -63,8 +63,7 @@ wasteIn:
   lbn r3 Filtration Network RatioGas Average
   lbn r4 Filtration Network PressureOutput Average
   lbn r5 ActiveVent Network PressureInternal Average
-  lbn r6 Filtration Network PressureOutput2
-Average
+  lbn r6 Filtration Network PressureOutput2 Average
   beqz r2 flush
   bge r6 MaxPressure flush
   select r4 r3 r4 0
