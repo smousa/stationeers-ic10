@@ -13,8 +13,8 @@ define Pipe   HASH("VolatilesPipeNetwork")
 
 # Devices
 alias Filtration db
-alias IceboxActivator d0 # Switch
-alias Thermostat d1      # Memory
+alias Activator  d0 # Switch
+alias Thermostat d1 # Memory
 
 main:
   move r15 0
@@ -51,7 +51,7 @@ flushFiltration:
   sbn ActiveVent Pipe Mode 1 # Inward
   sbn ActiveVent Pipe PressureInternal MaxPressure
 
-  l r0 IceboxActivator Setting
+  l r0 Activator Setting
   lbn r1 GasSensor Icebox TotalMoles Average
 
   # Turn vent on when the activator is off and gas is present
