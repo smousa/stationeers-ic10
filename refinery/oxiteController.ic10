@@ -22,7 +22,7 @@ alias Thermostat d1 # Memory
 main:
   l r0 Activator Setting
   l r1 Thermostat Setting
-  lbn r2 GasSensor Icebox TotalMoles Average
+  lbn r2 GasSensor Icebox Pressure Average
   l r3 Filtration PressureInput
   l r4 Filtration RatioOxygenInput
   lbn r5 PipeAnalyzer Pipe Pressure Average
