@@ -19,7 +19,7 @@ alias Thermostat d1 # Memory
 main:
   l r0 Activator Setting
   l r1 Thermostat Setting
-  lbn r2 GasSensor Icebox TotalMoles Average 
+  lbn r2 GasSensor Icebox Pressure Average 
   l r3 Filtration PressureOutput
   l r4 Filtration TemperatureOutput
 
