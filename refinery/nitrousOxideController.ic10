@@ -27,7 +27,7 @@ main:
   l r1 Thermostat Setting
   lbn r2 GasSensor Icebox RatioNitrousOxide Average
   lbn r3 GasSensor Icebox RatioNitrogen Average
-  lbn r4 GasSensor Icebox TotalMoles Average
+  lbn r4 GasSensor Icebox Pressure Average
   l r5 FiltrationInput PressureOutput
   l r6 FiltrationInput TemperatureOutput
   lbn r7 PipeAnalyzer WastePipe Pressure Average
