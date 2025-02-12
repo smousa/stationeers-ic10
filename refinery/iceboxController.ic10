@@ -1,3 +1,7 @@
+# Configuration
+define MaxVolume 16000
+define IdealGasConstant 8.314
+
 # Structures
 define GasSensor  HASH("StructureGasSensor")
 define Stacker    HASH("StructureStacker")
@@ -22,11 +26,17 @@ main:
   sbn Stacker r0 Mode 1
   sbn Door r0 Mode 1
 
-  lbn r6 GasSensor r0 TotalMoles Average
+  lbn r6 GasSensor r0 Pressure Average
   lbn r7 GasSensor r0 Temperature Average 
   lbn r8 Stacker r0 ExportCount Average 
   lbn r9 Stacker r0 Setting Average
   lbn r10 Door r0 Setting Maximum
+
+  # Compute moles present
+  mul r11 r6 MaxVolume
+  div r11 r11 IdealGasConstant
+  div r11 r11 r7
+  select r11 r7 r11 0
 
   # Lock devices when activated
   snez r15 r2
@@ -34,7 +44,7 @@ main:
   sbn Stacker r0 Lock r15
   
   # Lock door when ice or gas present
-  add r15 r6 r8
+  add r15 r11 r8
   sgtz r15 r15 
   sbn Door r0 Lock r15
 
@@ -55,7 +65,7 @@ main:
   mul r14 r3 r4
   mul r14 r14 r9
   add r14 r14 r1
-  slt r14 r6 r14
+  slt r14 r11 r14
   select r13 r14 r15 0
   seqz r12 r13 
   sbn HeatValve r0 On r13
@@ -66,7 +76,7 @@ main:
   s Activator Open 0
 
 reset:
-  s db Setting r6
+  s db Setting r11
   sbn Stacker r0 Output -1
   bgtz r8 done 
   sbn Stacker r0 ClearMemory 1
