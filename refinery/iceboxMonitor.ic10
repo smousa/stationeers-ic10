@@ -1,0 +1,91 @@
+# Configuration
+define CRoomVolume 16000
+define CRoomPressure 200
+define CRoomTemperature 373.15
+
+define VolatilesMass
+define OxygenMass
+define NitrogenMass
+define CarbonDioxideMass
+define NitrousOxideMass
+define PollutantMass
+define SteamMass
+
+define IdealGasConstant 
+
+define Alert
+define Warn
+define Info
+
+# Structures
+define ReleaseValve
+define HaltButton
+define FlashingLight
+
+# Channels
+define RoomVolume LogicType.Channel0
+define RoomTotalMoles LogicType.Channel1
+define RoomVolumeOfLiquid LogicType.Channel2
+
+# Devices
+alias GasSensor d0
+alias PressureConsole d1
+alias TemperatureConsole d2
+alias VolumeConsole d3
+
+main:
+  s GasSensor:0 RoomVolume CRoomVolume
+  
+  l r0 GasSensor Pressure
+  l r1 GasSensor Temperature
+
+  l r2 GasSensor RatioLiquidVolatiles
+  move r15 r2
+  mul r14 r2 VolatilesMass
+  l r2 GasSensor RatioLiquidOxygen
+  add r15 r15 r2
+  mul r13 r2 OxygenMass
+  add r14 r14 r13
+  l r2 GasSensor RatioLiquidNitrogen
+  add r15 r15 r2
+  mul r13 r2 NitrogenMass
+  add r14 r14 r13
+  l r2 GasSensor RatioLiquidCarbonDioxide
+  add r15 r15 r2
+  mul r13 r2 CarbonDioxideMass
+  add r14 r14 r13
+  l r2 GasSensor RatioNitrousOxide
+  add r15 r15 r2 
+  mul r13 r2 NitrousOxideMass
+  add r14 r14 r13 
+  l r2 GasSensor RatioPollutant
+  add r15 r15 r2 
+  mul r13 r2 PollutantMass 
+  add r14 r14 r13
+  l r2 GasSensor RatioWater
+  l r3 GasSensor RatioPollutedWater
+  add r13 r2 r3
+  add r15 r15 r13
+  mul r13 r13 WaterMass
+  add r14 r14 r13
+  mul r14 r14 r0
+  sub r15 1 r15 
+  mul r13 r15 r1
+  mul r13 r13 IdealGasConstant
+  add r14 r14 r13
+  mul r13 r0 CRoomVolume
+  div r14 r13 r14
+  s GasSensor:0 RoomTotalMoles r14
+
+  mul r15 r15 r14
+  mul r15 r15 r1
+  div r15 r15 r0
+  mul r15 r15 IdealGasConstant
+  sub r15 CRoomVolume r15 
+  s GasSensor:0 RoomVolumeOfLiquid r15
+
+  # 
+
+
+  
+  
