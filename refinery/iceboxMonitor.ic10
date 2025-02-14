@@ -13,9 +13,12 @@ define MassSteam
 
 define IdealGasConstant 
 
-define Alert
-define Warn
-define Info
+define InfoMax 0.5
+define WarnMax 0.85
+
+define InfoColor  6
+define WarnColor  5
+define AlertColor 4
 
 # Structures
 define ReleaseValve
@@ -85,3 +88,42 @@ main:
   mul r3 r3 IdealGasConstant
   sub r3 CRoomVolume r3
   s GasSensor:0 RoomVolumeOfLiquid r3
+
+pressure:
+  bdns ConsolePressure temperature
+  div r15 r0 CRoomPressure
+  push r15
+  push r0
+  push 1
+  jal updateConsole
+temperature:
+  bdns ConsoleTemperature volume
+  div r15 r1 CRoomTemperature
+  push r15 
+  push r1
+  push 2
+  jal updateConsole 
+volume:
+  bdns ConsoleVolume release
+  div r15 r3 CRoomVolume
+  push r15
+  push r3
+  push 3
+  jal updateConsole 
+  
+
+updateConsole:
+  pop r15
+  pop r14
+  pop r13
+  s dr15 Mode 0
+  s dr15 Setting r14
+  brgt r13 MaxInfo 2
+  s dr15 Color ColorInfo
+  j ra
+  brgt r13 MaxWarn 2
+  s dr15 Color ColorWarn
+  j ra
+  s dr15 Color ColorAlert
+  j ra
+  
