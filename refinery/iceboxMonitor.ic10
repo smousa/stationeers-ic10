@@ -91,33 +91,37 @@ main:
 
 pressure:
   bdns ConsolePressure temperature
-  div r15 r0 CRoomPressure
-  push r15
+  push CRoomPressure
   push r0
   push 1
-  jal updateConsole
 temperature:
   bdns ConsoleTemperature volume
-  div r15 r1 CRoomTemperature
-  push r15 
+  push CRoomTemperature
   push r1
-  push 2
-  jal updateConsole 
+  push 2 
 volume:
   bdns ConsoleVolume release
-  div r15 r3 CRoomVolume
-  push r15
+  push CRoomVolume
   push r3
   push 3
-  jal updateConsole 
-  
+release:
+  jal updateConsole
 
+  yield
+  j main
+  
 updateConsole:
   pop r15
   pop r14
   pop r13
   s dr15 Mode 0
   s dr15 Setting r14
+  div r13 r14 r13
+  sgt r12 r13 MaxInfo
+  sgt r11 r13 MaxWarn
+  add r12 r12 r11
+
+
   brgt r13 MaxInfo 2
   s dr15 Color ColorInfo
   j ra
