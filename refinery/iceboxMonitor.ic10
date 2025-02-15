@@ -1,6 +1,6 @@
 # Configuration
-define CRoomVolume 16000
-define CRoomPressure 200
+define CRoomVolume      16000
+define CRoomPressure    200
 define CRoomTemperature 373.15
 
 define MassVolatiles 
@@ -11,7 +11,7 @@ define MassNitrousOxide
 define MassPollutant 
 define MassSteam
 
-define IdealGasConstant 
+define IdealGasConstant 8.314
 
 define InfoMax 0.5
 define WarnMax 0.85
@@ -21,113 +21,114 @@ define WarnColor  5
 define AlertColor 4
 
 # Structures
-define ReleaseValve
-define HaltButton
 define FlashingLight
 
 # Channels
-define RoomVolume LogicType.Channel0
-define RoomTotalMoles LogicType.Channel1
+define RoomVolume         LogicType.Channel0
+define RoomTotalMoles     LogicType.Channel1
 define RoomVolumeOfLiquid LogicType.Channel2
 
 # Devices
-alias GasSensor d0
-alias PressureConsole d1
-alias TemperatureConsole d2
-alias VolumeConsole d3
+alias GasSensor          d0
+alias ConsolePressure    d1
+alias ConsoleTemperature d2
+alias ConsoleVolume      d3
 
 main:
+  l r0 GasSensor NameHash
+  l r1 GasSensor Pressure
+  l r2 GasSensor Temperature 
+
   s GasSensor:0 RoomVolume CRoomVolume
-  
-  l r0 GasSensor Pressure
-  l r1 GasSensor Temperature
 
   l r15 GasSensor RatioLiquidVolatiles 
-  div r2 r15 MassVolatiles
-  move r3 r15 
+  div r3 r15 MassVolatiles
+  move r4 r15 
   l r15 GasSensor RatioLiquidOxygen
   div r14 r15 MassOxygen
-  add r2 r2 r14
-  add r3 r3 r15
+  add r3 r3 r14
+  add r4 r4 r15
   l r15 GasSensor RatioLiquidNitrogen
   div r14 r15 MassNitrogen
-  add r2 r2 r14 
-  add r3 r3 r15
+  add r3 r3 r14 
+  add r4 r4 r15
   l r15 GasSensor RatioLiquidCarbonDioxide
   div r14 r15 MassCarbonDioxide
-  add r2 r2 r14
-  add r3 r3 r15
+  add r3 r3 r14
+  add r4 r4 r15
   l r15 GasSensor RatioLiquidNitrousOxide
   div r14 r15 MassNitrousOxide
-  add r2 r2 r14
-  add r3 r3 r15
+  add r3 r3 r14
+  add r4 r4 r15
   l r15 GasSensor RatioLiquidPollutant
   div r14 r15 MassPollutant
-  add r2 r2 r14
-  add r3 r3 r15
+  add r3 r3 r14
+  add r4 r4 r15
   l r15 GasSensor RatioPollutedWater
   div r14 r15 MassSteam
-  add r2 r2 r14
-  add r3 r3 r15
+  add r3 r3 r14
+  add r4 r4 r15
   l r15 GasSensor RatioWater
   div r14 r15 MassSteam
-  add r2 r2 r14
-  add r3 r3 r15 
+  add r3 r3 r14
+  add r4 r4 r15 
 
-  sub r3 1 r3
-  mul r15 r3 r1
+  sub r4 1 r4
+  mul r15 r4 r2
   mul r15 r15 IdealGasConstant 
-  add r2 r2 r15 
-  mul r15 r0 CRoomVolume
-  div r2 r15 r2
-  s GasSensor:0 RoomTotalMoles r2
+  add r3 r3 r15 
+  mul r15 r1 CRoomVolume
+  div r3 r15 r3
+  s GasSensor:0 RoomTotalMoles r3
 
-  mul r3 r3 r2
-  mul r3 r3 r1
-  div r3 r3 r0
-  mul r3 r3 IdealGasConstant
-  sub r3 CRoomVolume r3
-  s GasSensor:0 RoomVolumeOfLiquid r3
+  mul r4 r4 r3
+  mul r4 r4 r2
+  div r4 r4 r1
+  mul r4 r4 IdealGasConstant
+  sub r4 CRoomVolume r4
+  s GasSensor:0 RoomVolumeOfLiquid r4
 
+  move sp 0
 pressure:
   bdns ConsolePressure temperature
   push CRoomPressure
-  push r0
+  push r1
   push 1
 temperature:
   bdns ConsoleTemperature volume
   push CRoomTemperature
-  push r1
+  push r2
   push 2 
 volume:
-  bdns ConsoleVolume release
+  bdns ConsoleVolume flush
   push CRoomVolume
-  push r3
+  push r4
   push 3
-release:
-  jal updateConsole
 
+  move r15 0
+flush:
+  beqz sp done
+  pop r14
+  pop r13 
+  pop r12
+
+  s dr12 Mode 0
+  s dr12 Setting r13
+  div r14 r13 r14
+  bgt r14 InfoMax warn
+  s dr12 Color InfoColor
+  j flush
+warn:
+  bgt r14 WarnMax alert
+  s dr12 Color WarnColor
+  j flush
+alert:
+  move r15 1
+  s dr12 Color AlertColor
+  j flush
+
+done:
+  sbn FlashingLight r0 On r15
   yield
   j main
-  
-updateConsole:
-  pop r15
-  pop r14
-  pop r13
-  s dr15 Mode 0
-  s dr15 Setting r14
-  div r13 r14 r13
-  sgt r12 r13 MaxInfo
-  sgt r11 r13 MaxWarn
-  add r12 r12 r11
-
-
-  brgt r13 MaxInfo 2
-  s dr15 Color ColorInfo
-  j ra
-  brgt r13 MaxWarn 2
-  s dr15 Color ColorWarn
-  j ra
-  s dr15 Color ColorAlert
-  j ra
   
