@@ -106,7 +106,6 @@ flush:
   pop r14
   pop r13 
   pop r12
-
   s dr12 Mode 0
   s dr12 Setting r13
   div r14 r13 r14
