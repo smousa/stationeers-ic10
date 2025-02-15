@@ -2,7 +2,6 @@
 define MaxPressure 51675.75
 
 # Structures
-define GasSensor          HASH("StructureGasSensor")
 define PipeAnalyzer       HASH("StructurePipeAnalysizer")
 define ActiveVent         HASH("StructureActiveVent")
 define Regulator          HASH("StructureBackPressureRegulator")
@@ -14,19 +13,23 @@ define CoolValve          HASH("StructureDigitalValve")
 define Icebox    HASH("Water Icebox")
 define Pipe      HASH("WaterPipeNetwork")
 
+# Channels
+define RoomTotalMoles LogicType.Channel1
+
 # Devices
 alias Filtration       db
-alias Activator        d0 # Switch
-alias Thermostat       d1 # Memory
-alias WaterMass        d2 # Memory
+alias GasSensor        d0
+alias Activator        d1 # Switch
+alias Thermostat       d2 # Memory
+alias WaterMass        d3 # Memory
 
 main:
   l r0 Activator Setting
   l r1 Thermostat Setting
   l r2 WaterMass Setting
-  lbn r3 GasSensor Icebox RatioNitrogen Average
-  lbn r4 GasSensor Icebox Temperature Average
-  lbn r5 GasSensor Icebox TotalMoles Average
+  lbn r3 GasSensor RatioNitrogen
+  lbn r4 GasSensor Temperature
+  lbn r5 GasSensor:0 RoomTotalMoles
   lbn r6 PipeAnalyzer Pipe Pressure Average
   lbn r7 PipeAnalyzer Pipe RatioNitrogen Average
   lbn r8 PipeAnalyzer Pipe Temperature Average
