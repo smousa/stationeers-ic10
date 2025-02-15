@@ -21,7 +21,7 @@ define WarnColor  5
 define AlertColor 4
 
 # Structures
-define FlashingLight
+define FlashingLight HASH("StructureFlashingLight")
 
 # Channels
 define RoomVolume         LogicType.Channel0
@@ -38,39 +38,40 @@ main:
   l r0 GasSensor NameHash
   l r1 GasSensor Pressure
   l r2 GasSensor Temperature 
-
+  
   s GasSensor:0 RoomVolume CRoomVolume
-  l r15 GasSensor RatioLiquidVolatiles 
-  div r3 r15 MassVolatiles
-  move r4 r15 
-  l r15 GasSensor RatioLiquidOxygen
-  div r14 r15 MassOxygen
-  add r3 r3 r14
-  add r4 r4 r15
-  l r15 GasSensor RatioLiquidNitrogen
-  div r14 r15 MassNitrogen
-  add r3 r3 r14 
-  add r4 r4 r15
-  l r15 GasSensor RatioLiquidCarbonDioxide
-  div r14 r15 MassCarbonDioxide
-  add r3 r3 r14
-  add r4 r4 r15
-  l r15 GasSensor RatioLiquidNitrousOxide
-  div r14 r15 MassNitrousOxide
-  add r3 r3 r14
-  add r4 r4 r15
-  l r15 GasSensor RatioLiquidPollutant
-  div r14 r15 MassPollutant
-  add r3 r3 r14
-  add r4 r4 r15
-  l r15 GasSensor RatioPollutedWater
-  div r14 r15 MassSteam
-  add r3 r3 r14
-  add r4 r4 r15
-  l r15 GasSensor RatioWater
-  div r14 r15 MassSteam
-  add r3 r3 r14
-  add r4 r4 r15 
+
+  move sp 0
+  push LogicType.RatioLiquidVolatiles
+  push MassVolatiles
+  push LogicType.RatioLiquidOxygen
+  push MassOxygen
+  push LogicType.RatioLiquidNitrogen
+  push MassNitrogen
+  push LogicType.RatioLiquidCarbonDioxide
+  push MassCarbonDioxide
+  push LogicType.RatioLiquidNitrousOxide
+  push MassNitrousOxide
+  push LogicType.RatioLiquidPollutant
+  push MassPollutant
+  push LogicType.RatioPollutedWater
+  push MassSteam
+  push LogicType.RatioWater
+  push MassSteam
+
+  move r3 0 # RoomTotalMoles
+  move r4 0 # RoomVolumeOfLiquid
+
+sumRatio:
+  beqz sp compute
+  pop r15
+  pop r14
+  l r13 GasSensor r14
+  div r12 r13 R15
+  add r3 r3 r13
+  add r4 r4 r12
+
+compute:
   sub r4 1 r4
   mul r15 r4 r2
   mul r15 r15 IdealGasConstant 
@@ -86,7 +87,6 @@ main:
   sub r4 CRoomVolume r4
   s GasSensor:0 RoomVolumeOfLiquid r4
 
-  move sp 0
 pressure:
   bdns ConsolePressure temperature
   push CRoomPressure
@@ -113,14 +113,12 @@ flush:
   s dr12 Mode 0
   s dr12 Setting r13
   div r14 r13 r14
-  bgt r14 InfoMax warn
+  brgt r14 InfoMax 2
   s dr12 Color InfoColor
   j flush
-warn:
-  bgt r14 WarnMax alert
+  brgt r14 WarnMax 2
   s dr12 Color WarnColor
   j flush
-alert:
   move r15 1
   s dr12 Color AlertColor
   j flush
@@ -129,4 +127,3 @@ done:
   sbn FlashingLight r0 On r15
   yield
   j main
-  
