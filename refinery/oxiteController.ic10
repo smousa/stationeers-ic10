@@ -3,7 +3,6 @@ define MaxPressure 51675.75
 define TargetRatio 0.33
 
 # Structures
-define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("PipeAnalysizer")
 define ActiveVent   HASH("StructureActiveVent")
 define Regulator    HASH("StructureBackPressureRegulator")
@@ -16,13 +15,14 @@ define Pipe   HASH("OxitePipeNetwork")
 
 # Devices
 alias Filtration db
-alias Activator  d0 # Switch
-alias Thermostat d1 # Memory
+alias GasSensor  d0
+alias Activator  d1 # Switch
+alias Thermostat d2 # Memory
 
 main:
   l r0 Activator Setting
   l r1 Thermostat Setting
-  lbn r2 GasSensor Icebox Pressure Average
+  l r2 GasSensor Pressure
   l r3 Filtration PressureInput
   l r4 Filtration RatioOxygenInput
   lbn r5 PipeAnalyzer Pipe Pressure Average
