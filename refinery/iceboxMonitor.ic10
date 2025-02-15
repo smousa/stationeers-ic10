@@ -61,7 +61,6 @@ main:
 
   move r3 0 # RoomTotalMoles
   move r4 0 # RoomVolumeOfLiquid
-
 sumRatio:
   beqz sp compute
   pop r15
@@ -70,7 +69,6 @@ sumRatio:
   div r12 r13 R15
   add r3 r3 r13
   add r4 r4 r12
-
 compute:
   sub r4 1 r4
   mul r15 r4 r2
@@ -79,7 +77,6 @@ compute:
   mul r15 r1 CRoomVolume
   div r3 r15 r3
   s GasSensor:0 RoomTotalMoles r3
-
   mul r4 r4 r3
   mul r4 r4 r2
   div r4 r4 r1
