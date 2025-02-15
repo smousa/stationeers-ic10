@@ -12,7 +12,6 @@ define CondensationTemperature 350
 define IdealGasConstant        8.314
 
 # Structures
-define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define VolumePump   HASH("StructureVolumePump")
 define Regulator    HASH("StructureBackPressureRegulator")
@@ -21,12 +20,16 @@ define Regulator    HASH("StructureBackPressureRegulator")
 define Icebox    HASH("Water Icebox")
 define Pipe      HASH("WastePipeNetwork")
 
+# Channels
+define RoomTotalMoles LogicType.Channel1
+
 # Devices
 alias FiltrationOutput db
 alias FiltrationInput  d0
-alias WasteThermostat  d1 # Memory
-alias WaterThermostat  d2 # Memory
-alias WaterMass        d3 # Memory
+alias GasSensor        d1
+alias WasteThermostat  d2 # Memory
+alias WaterThermostat  d3 # Memory
+alias WaterMass        d4 # Memory
 
 main:
   # Calculate specific heat
@@ -73,9 +76,9 @@ main:
   lbn r4 PipeAnalyzer Pipe RatioPollutant Average
   lbn r5 PipeAnalyzer Pipe RatioLiquidPollutant Average
   lbn r6 PipeAnalyzer Pipe TotalMoles Average
-  lbn r7 GasSensor Icebox Temperature Average
-  lbn r8 GasSensor Icebox RatioNitrogen Average
-  lbn r9 GasSensor Icebox TotalMoles Average
+  l r7 GasSensor Temperature
+  l r8 GasSensor RatioNitrogen
+  l r9 GasSensor:0 RoomTotalMoles
 
   add r11 r4 r5 
   select r11 r6 r11 1 # Ratio [Liquid] Pollutant
