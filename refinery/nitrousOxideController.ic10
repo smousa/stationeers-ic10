@@ -4,7 +4,6 @@ define NitrousOxideMaxPressure 680
 define TargetRatio 0.33
 
 # Structures
-define GasSensor    HASH("StructureGasSensor")
 define PipeAnalyzer HASH("StructurePipeAnalysizer")
 define ActiveVent   HASH("StructureActiveVent")
 define Regulator    HASH("StructureBackPressureRegulator")
@@ -16,18 +15,22 @@ define Icebox       HASH("Nitrice Icebox")
 define Pipe         HASH("NitrousOxidePipeNetwork")
 define WastePipe    HASH("NitricePipeNetwork")
 
+# Channels
+define RoomTotalMoles LogicType.Channel1
+
 # Devices
 alias FiltrationInput  db
 alias FiltrationOutput d0
-alias Activator        d1 # Switch
-alias Thermostat       d2 # Memory
+alias GasSensor        d1
+alias Activator        d2 # Switch
+alias Thermostat       d3 # Memory
 
 main:
   l r0 Activator Setting
   l r1 Thermostat Setting
-  lbn r2 GasSensor Icebox RatioNitrousOxide Average
-  lbn r3 GasSensor Icebox RatioNitrogen Average
-  lbn r4 GasSensor Icebox Pressure Average
+  l r2 GasSensor RatioNitrousOxide
+  l r3 GasSensor RatioNitrogen
+  l r4 GasSensor Pressure
   l r5 FiltrationInput PressureOutput
   l r6 FiltrationInput TemperatureOutput
   lbn r7 PipeAnalyzer WastePipe Pressure Average
