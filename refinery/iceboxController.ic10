@@ -1,19 +1,18 @@
-# Configuration
-define MaxVolume 16000
-define IdealGasConstant 8.314
-
 # Structures
-define GasSensor  HASH("StructureGasSensor")
 define Stacker    HASH("StructureStacker")
 define Door       HASH("StructureCompositeDoor")
 define HeatPump   HASH("StructureVolumePump")
 define HeatValve  HASH("StructureDigitalValve")
 
+# Channels
+define RoomTotalMoles LogicType.Channel1
+
 # Devices
-alias Activator  d0 # Switch
-alias IceMoles   d1 # Memory
-alias Thermostat d2 # Memory
-alias StackCount d3 # Dial
+alias GasSensor  d0 
+alias Activator  d1 # Switch
+alias IceMoles   d2 # Memory
+alias Thermostat d3 # Memory
+alias StackCount d4 # Dial
 
 main:
   l r0 db NameHash
@@ -26,17 +25,14 @@ main:
   sbn Stacker r0 Mode 1
   sbn Door r0 Mode 1
 
-  lbn r6 GasSensor r0 Pressure Average
-  lbn r7 GasSensor r0 Temperature Average 
+  l r6 GasSensor:0 RoomTotalMoles
+  l r7 GasSensor Temperature
   lbn r8 Stacker r0 ExportCount Average 
   lbn r9 Stacker r0 Setting Average
   lbn r10 Door r0 Setting Maximum
 
-  # Compute moles present
-  mul r11 r6 MaxVolume
-  div r11 r11 IdealGasConstant
-  div r11 r11 r7
-  select r11 r7 r11 0
+  brnanz r6 1
+  move r6 0
 
   # Lock devices when activated
   snez r15 r2
@@ -44,7 +40,7 @@ main:
   sbn Stacker r0 Lock r15
   
   # Lock door when ice or gas present
-  add r15 r11 r8
+  add r15 r6 r8
   sgtz r15 r15 
   sbn Door r0 Lock r15
 
@@ -65,7 +61,7 @@ main:
   mul r14 r3 r4
   mul r14 r14 r9
   add r14 r14 r1
-  slt r14 r11 r14
+  slt r14 r6 r14
   select r13 r14 r15 0
   seqz r12 r13 
   sbn HeatValve r0 On r13
