@@ -1,0 +1,61 @@
+define SiloMax 600
+
+define Silo HASH("StructureSDBSilo")
+define Stacker HASH("StructureStacker")
+define Memory HASH("StructureLogicMemory")
+ 
+alias IceIndex r0
+alias OreIndex r1
+
+move sp 0
+
+push HASH("ItemIce")
+push HASH("ItemOxite")
+push HASH("ItemNitrice")
+push HASH("ItemVolatiles")
+move IceIndex sp
+
+push HASH("ItemCobaltOre")
+push HASH("ItemCoalOre")
+push HASH("ItemIronOre")
+push HASH("ItemCopperOre")
+push HASH("ItemGoldOre")
+push HASH("ItemSilverOre")
+push HASH("ItemNickelOre")
+push HASH("ItemLeadOre")
+push HASH("ItemSiliconOre")
+move OreIndex sp
+
+alias VendingMachine d0
+alias OreSilo d1
+
+main:
+  mod sp sp OreIndex
+  add sp sp 1
+  peek r2 # ItemHash
+
+  # Synchronously load the export count
+  sbn Silo r2 Open 0
+  lbn r15 Silo r2 ExportCount Average
+
+  # Update the silo capacity
+  lbn r3 Memory r2 Setting Average
+  lbn r14 Stacker r2 Setting Average
+  mul r15 r15 r14
+  add r3 r3 r15
+  sbn Memory r2 Setting r3
+  sbn Silo r2 ClearMemory 1
+  lbn r15 Silo r2 Activate
+  sbn Silo r2 Open r15
+
+  # Continue if no capacity
+  blez r3 main
+  bgt sp IceIndex vend
+  l r15 OreSilo Quantity
+  bge r15 SiloMax main
+
+vend:
+  s VendingMachine RequestHash r2
+  ls r15 VendingMachine 1 Quantity
+  sub r3 r3 r15
+  j main
