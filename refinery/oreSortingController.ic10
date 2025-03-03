@@ -58,4 +58,5 @@ vend:
   s VendingMachine RequestHash r2
   ls r15 VendingMachine 1 Quantity
   sub r3 r3 r15
+  sbn Memory r2 Setting r3
   j main
