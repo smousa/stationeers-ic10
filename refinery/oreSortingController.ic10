@@ -34,6 +34,9 @@ main:
   add sp sp 1
   peek r2 # ItemHash
 
+  lbn r15 Silo r2 Powered Minimum 
+  beqz r15 main
+
   # Synchronously load the export count
   sbn Silo r2 Open 0
   lbn r15 Silo r2 ExportCount Average
