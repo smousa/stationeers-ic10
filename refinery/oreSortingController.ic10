@@ -48,7 +48,6 @@ main:
   add r3 r3 r15
   sbn Memory r2 Setting r3
   sbn Silo r2 ClearMemory 1
-  lbn r15 Silo r2 Activate
   sbn Switch r2 Open 1
 
   blez r3 main
