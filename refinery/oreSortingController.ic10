@@ -55,9 +55,7 @@ main:
   bgt sp IceIndex vend
 
   # Check if the ore silo has capacity 
-  l r15 VendingMachine ExportCount Average
-  l r14 OreSilo ExportCount Average
-  sub r15 r15 r14
+  l r15 OreSilo Quantity Average
   bge r15 SiloMax main
 
 vend:
