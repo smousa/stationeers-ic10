@@ -52,7 +52,7 @@ main:
   sbn Switch r2 Open 1
 
   blez r3 main
-  bgt sp IceIndex vend
+  ble sp IceIndex vend
 
   # Check if the ore silo has capacity 
   l r15 OreSilo Quantity Average
