@@ -3,6 +3,7 @@ define SiloMax 600
 define Silo HASH("StructureSDBSilo")
 define Stacker HASH("StructureStacker")
 define Memory HASH("StructureLogicMemory")
+define Switch HASH("StructureLogicSwitch2")
  
 alias IceIndex r0
 alias OreIndex r1
@@ -37,11 +38,10 @@ main:
   lbn r15 Silo r2 Powered Minimum 
   beqz r15 main
 
-  # Synchronously load the export count
-  sbn Silo r2 Open 0
+  # Update the silo capacity 
+  sbn Switch r2 Open 0
+  yield
   lbn r15 Silo r2 ExportCount Average
-
-  # Update the silo capacity
   lbn r3 Memory r2 Setting Average
   lbn r14 Stacker r2 Setting Average
   mul r15 r15 r14
@@ -49,12 +49,15 @@ main:
   sbn Memory r2 Setting r3
   sbn Silo r2 ClearMemory 1
   lbn r15 Silo r2 Activate
-  sbn Silo r2 Open r15
+  sbn Switch r2 Open 1
 
-  # Continue if no capacity
   blez r3 main
   bgt sp IceIndex vend
-  l r15 OreSilo Quantity
+
+  # Check if the ore silo has capacity 
+  l r15 VendingMachine ExportCount Average
+  l r14 OreSilo ExportCount Average
+  sub r15 r15 r14
   bge r15 SiloMax main
 
 vend:
