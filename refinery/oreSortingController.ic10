@@ -54,7 +54,7 @@ main:
   ble sp IceIndex vend
 
   # Check if the ore silo has capacity 
-  l r15 OreSilo Quantity Average
+  l r15 OreSilo Quantity
   bge r15 SiloMax main
 
 vend:
