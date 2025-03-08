@@ -48,7 +48,7 @@ main:
   add r13 r4 r5
   sub r13 1 r13 # not X
   ceil r15 r13
-  bnez r15 flushFiltration
+  beqz r15 flushFiltration
 
   mul r13 r13 r3
   sle r15 r13 r14
