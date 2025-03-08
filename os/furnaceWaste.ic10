@@ -4,26 +4,17 @@ define MaxTemperature 303.15
 define CondensationTemperature 431
 define CondensationPressure 6000
 
-# Structures
-define Pump HASH("StructureVolumeGasPump")
-define Valve HASH("StructureDigitalValve")
-define PurgeValve HASH("StructurePurgeValve")
-define PipeAnalyzer HASH("StructurePipeAnalysizer")
-
-# Networks
-define CoolantPipe HASH("CoolantPipeNetwork")
-define WastePipe HASH("WastePipeNetwork")
-
 alias Filtration db
-alias OutputFiltration d1
+alias Pump d0
+alias Valve d1
 
 main:
   # Check pipe temperature
   l r0 Filtration TemperatureOutput2
   sgt r15 r0 MaxTemperature
   seqz r14 r15 
-  sbn Pump CoolantPipe On r15
-  sbn Valve CoolantPipe On r14
+  s Pump On r15
+  s Valve On r14
 
   move r15 0
   # Check filter life
