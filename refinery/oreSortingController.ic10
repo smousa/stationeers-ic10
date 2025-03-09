@@ -81,5 +81,3 @@ vend:
   blez r14 main 
   yield
   j vend
-  
-  
