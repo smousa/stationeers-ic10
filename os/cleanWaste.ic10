@@ -1,0 +1,78 @@
+# Configuration
+define TemperatureMax 303.15
+
+# Properties
+define OxygenSpecificHeat 21.1
+define NitrogenSpecificHeat 20.5
+define CarbonDioxideSpecificHeat 28.2
+define IdealGasConstant 8.314
+
+# Inputs
+alias DestPipe db
+alias SourcePipe d1
+alias PurgeValve d2
+alias Pump d3
+
+# Globals
+alias cSource r0
+alias cDest r1
+
+main:
+  # Specific heat of source
+  l r2 SourcePipe RatioOxygenOutput2
+  l r3 SourcePipe RatioNitrogenOutput2
+  l r4 SourcePipe RatioCarbonDioxideOutput2
+  mul cSource r2 OxygenSpecificHeat
+  mul r15 r3 NitrogenSpecific Heat
+  add cSource cSource r15 
+  mul r15 r4 CarbonDioxideSpecificHeat
+  add cSource cSource r15
+
+  # Specific heat of dest
+  l r5 DestPipe RatioOxygenInput
+  l r6 DestPipe RatioNitrogenInput
+  l r7 DestPipe RatioCarbonDioxideInput
+  mul cDest r5 OxygenSpecificHeat
+  mul r15 r6 NitrogenSpecificHeat
+  add cDest cDest r15 
+  mul r15 r7 CarbonDioxideSpecificHeat
+  add cDest cDest r15
+
+  # Initialize Values
+  l r5 SourcePipe TemperatureOutput2
+  l r6 SourcePipe PressureOutput2
+  l r7 DestPipe TemperatureInput
+  l r8 DestPipe TotalMolesInput
+  l r9 VolumePump Maximum
+  add r10 r2 r3
+  add r10 r10 r4
+  floor r10 r10
+
+  # Compute the target volume of the pump
+  sub r15 MaxTemperature r7
+  mul r15 r15 r8
+  mul r15 r15 cDest
+  sub r14 r5 MaxTemperature
+  div r15 r15 r14
+  div r15 r15 cSource
+  mul r15 r15 r5
+  mul r15 r15 IdealGasConstant
+  div r15 r15 r6
+  max r15 r15 0
+  min r15 r15 r9
+
+  # Apply volume based on temperature
+  sgtz r14 r14
+  select r15 r14 r15 r9
+  s VolumePump Setting r15
+
+  # Turn on pump if clean
+  select r14 r6 r10 0
+  s Pump On r14
+
+  Turn on purge valve if pump is 0
+  seqz r13 r15
+  s PurgeValve On r13
+
+  yield
+  j main
