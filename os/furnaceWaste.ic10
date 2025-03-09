@@ -1,6 +1,6 @@
 # Configuration
 define MaxPressure 51675.75
-define MaxTemperature 303.15
+define MinTemperature 293.15
 define CondensationTemperature 431
 define CondensationPressure 6000
 
@@ -11,7 +11,7 @@ alias Valve d1
 main:
   # Check pipe temperature
   l r0 Filtration TemperatureOutput2
-  sgt r15 r0 MaxTemperature
+  sgt r15 r0 MinTemperature
   seqz r14 r15 
   s Pump On r15
   s Valve On r14
@@ -25,13 +25,13 @@ main:
 
   # Check input pressure and combustion 
   l r1 Filtration CombustionInput
-  bnez r1 flushFiltration
+  bnez r1 flush
   l r1 Filtration PressureInput 
-  beqz r1 flushFiltration 
+  beqz r1 flush
 
   # Check output pressure
   l r1 Filtration PressureOutput2
-  bgt r1 MaxPressure flushFiltration
+  bgt r1 MaxPressure flush
 
   # Compute moles needed to force condensation
   l r3 Filtration TotalMolesOutput2
@@ -41,19 +41,19 @@ main:
   mul r14 r0 r3
   div r14 r14 r1
   snan r15 r14
-  bnez r15 flushFiltration
+  bnez r15 flush
   mul r14 r14 CondensationPressure
   div r14 r14 CondensationTemperature # moles
 
   add r13 r4 r5
   sub r13 1 r13 # not X
   ceil r15 r13
-  beqz r15 flushFiltration
+  beqz r15 flush
 
   mul r13 r13 r3
   sle r15 r13 r14
 
-flushFiltration:
+flush:
   s Filtration Mode r15 
 
 yield
