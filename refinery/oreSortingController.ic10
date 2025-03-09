@@ -4,6 +4,7 @@ define Silo HASH("StructureSDBSilo")
 define Stacker HASH("StructureStacker")
 define Memory HASH("StructureLogicMemory")
 define Switch HASH("StructureLogicSwitch2")
+define Transformer HASH("StructureTransformerSmallReversed")
 
 define ItemOre HASH("ItemOre")
  
@@ -35,6 +36,18 @@ main:
   mod sp sp OreIndex
   add sp sp 1
   peek r2 # ItemHash
+
+  lbn r15 Silo ItemOre Quantity Maximum
+  lbn r14 Silo ItemOre Open Maximum 
+  select r15 r15 0 r14
+  seqz r15 r15
+  sbn Transformer ItemOre On r15
+
+  lbn r15 Silo r2 Quantity Maximum
+  lbn r14 Silo r2 Open Maximum
+  select r15 r15 0 r14
+  seqz r15 r15
+  sbn Transformer r2 On r15
 
   lbn r15 Silo r2 Powered Minimum 
   beqz r15 main
