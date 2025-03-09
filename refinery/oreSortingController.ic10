@@ -4,6 +4,8 @@ define Silo HASH("StructureSDBSilo")
 define Stacker HASH("StructureStacker")
 define Memory HASH("StructureLogicMemory")
 define Switch HASH("StructureLogicSwitch2")
+
+define ItemOre HASH("ItemOre")
  
 alias IceIndex r0
 alias OreIndex r1
@@ -28,7 +30,6 @@ push HASH("ItemSiliconOre")
 move OreIndex sp
 
 alias VendingMachine d0
-alias OreSilo d1
 
 main:
   mod sp sp OreIndex
@@ -38,28 +39,47 @@ main:
   lbn r15 Silo r2 Powered Minimum 
   beqz r15 main
 
-  # Update the silo capacity 
+  # Update the capacity
   sbn Switch r2 Open 0
   yield
-  lbn r15 Silo r2 ExportCount Average
-  lbn r3 Memory r2 Setting Average
-  lbn r14 Stacker r2 Setting Average
-  mul r15 r15 r14
-  add r3 r3 r15
-  sbn Memory r2 Setting r3
+  lbn r15 Memory r2 Setting Average 
+  lbn r14 Silo r2 ExportCount Sum
+  lbn r13 Stacker r2 Setting
+  mul r14 r14 r13
+  add r15 r15 r14
+  sbn Memory r2 Setting r15 
   sbn Silo r2 ClearMemory 1
   sbn Switch r2 Open 1
 
-  blez r3 main
-  ble sp IceIndex vend
+  blez r15 main
+  move r14 SiloMax
+  blt sp IceIndex vend
 
-  # Check if the ore silo has capacity 
-  l r15 OreSilo Quantity
-  bge r15 SiloMax main
+  # Update ore silo capacity 
+  sbn Switch ItemOre Open 0
+  yield
+  sbn r14 Memory ItemOre Setting 
+  lbn r13 Silo ItemOre ExportCount Sum
+  add r14 r14 r13
+  sbn Memory ItemOre Setting r14
+  sbn Silo ItemOre ClearMemory 1
+  sbn Switch ItemOre Open 1
+  blez r14 main
 
 vend:
   s VendingMachine RequestHash r2
-  ls r15 VendingMachine 1 Quantity
-  sub r3 r3 r15
-  sbn Memory r2 Setting r3
-  j main
+  ls r13 VendingMachine 1 Quantity
+  beqz r13 main
+  sub r15 r15 r13
+  sbn Memory r2 Setting r15
+
+  brlt sp IceIndex 2
+  sub r14 r14 1
+  sbn Memory ItemOre Setting r14
+
+  blez r15 main
+  blez r14 main 
+  yield
+  j vend
+  
+  
