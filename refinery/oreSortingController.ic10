@@ -72,12 +72,11 @@ vend:
   bge r14 SiloMax main
   
   s VendingMachine RequestHash ItemHash
-  ls r13 VendingMachine 1 Occupied
-  ls r12 VendingMachine 1 Quantity
+  ls r13 VendingMachine 1 Quantity
   beqz r13 main
 
-  select r13 r15 IngotStackSize OreStackSize
-  div r13 r12 r13 
+  select r12 r15 IngotStackSize OreStackSize
+  div r13 r13 r12 
   add r14 r14 r13
   sbn Memory ItemHash Setting r14
   add OreQuantity OreQuantity r15 
