@@ -44,7 +44,7 @@ main:
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
-  sle r15 sp OreIndex
+  sgt r15 sp OreIndex
 
   # Update the capacity
   sbn Switch ItemHash Open 0
@@ -76,7 +76,7 @@ vend:
   ls r12 VendingMachine 1 Quantity
   beqz r13 main
 
-  select r13 r15 OreStackSize IngotStackSize
+  select r13 r15 IngotStackSize OreStackSize
   div r13 r12 r13 
   add r14 r14 r13
   sbn Memory ItemHash Setting r14
