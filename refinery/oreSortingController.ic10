@@ -44,39 +44,43 @@ main:
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
+  sle r15 sp OreIndex
 
   # Update the capacity
   sbn Switch ItemHash Open 0
   yield
-  lbn r15 Memory ItemHash Setting Average
-  lbn r14 Silo ItemHash ExportCount Minimum
-  sub r15 r15 r14
-  sbn Memory ItemHash Setting r15 
+  lbn r14 Memory ItemHash Setting Average
+  lbn r13 Silo ItemHash ExportCount Minimum
+  sub r14 r14 r13
+  sbn Memory ItemHash Setting r14
   sbn Silo ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
+
   j vend
 
 quiesce:
   yield
-  l r14 VendingMachine ExportCount
-  lbn r13 Stacker ItemOre ImportCount Sum
-  blt r13 r14 quiesce
+  l r13 VendingMachine ExportCount
+  lbn r12 Stacker ItemOre ImportCount Sum
+  blt r12 r13 quiesce
   s VendingMachine ClearMemory 1
   sbn Stacker ItemOre ClearMemory 1
   lbn OreQuantity Silo ItemOre Quantity Minimum
 
 vend:
-  bge r15 SiloMax main
-  move r14 OreStackSize
-  brle sp OreIndex 3
-  bge OreQuantity SiloMax quiesce
-  add OreQuantity OreQuantity 1
-  move r14 IngotStackSize
+  bge OreQuantity SiloMax quiesce 
+  bge r14 SiloMax main
+  
   s VendingMachine RequestHash ItemHash
-  ls r13 VendingMachine 1 Quantity
+  ls r13 VendingMachine 1 Occupied
+  ls r12 VendingMachine 1 Quantity
   beqz r13 main
-  div r14 r13 r14
-  add r15 r15 r14
-  sbn Memory ItemHash Setting r15 
+
+  select r13 r15 OreStackSize IngotStackSize
+  div r13 r12 r13 
+  add r14 r14 r13
+  sbn Memory ItemHash Setting r14
+  add OreQuantity OreQuantity r15 
+
   yield
   j vend
