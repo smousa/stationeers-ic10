@@ -1,14 +1,19 @@
 define SiloMax 600
+define OreStackSize 50
+define IngotStackSize 500
 
 define Silo HASH("StructureSDBSilo")
 define Stacker HASH("StructureStacker")
 define Memory HASH("StructureLogicMemory")
 define Switch HASH("StructureLogicSwitch2")
 
-define ItemOre HASH("ItemOre")
+define Ore HASH("ItemOre")
+define Ingot HASH("ItemIngot")
  
-alias IceIndex r0
-alias OreIndex r1
+alias OreIndex r0
+alias IngotIndex r1
+alias OreQuantity r2
+alias ItemHash r3
 
 move sp 0
 
@@ -16,10 +21,10 @@ push HASH("ItemIce")
 push HASH("ItemOxite")
 push HASH("ItemNitrice")
 push HASH("ItemVolatiles")
-move IceIndex sp
-
 push HASH("ItemCobaltOre")
 push HASH("ItemCoalOre")
+move OreIndex sp
+
 push HASH("ItemIronOre")
 push HASH("ItemCopperOre")
 push HASH("ItemGoldOre")
@@ -27,57 +32,51 @@ push HASH("ItemSilverOre")
 push HASH("ItemNickelOre")
 push HASH("ItemLeadOre")
 push HASH("ItemSiliconOre")
-move OreIndex sp
+move IngotIndex sp
 
 alias VendingMachine d0
 
-main:
-  mod sp sp OreIndex
-  add sp sp 1
-  peek r2 # ItemHash
+sbn Stacker Ore Setting OreStackSize
+sbn Stacker Ingot Setting IngotStackSize
+move OreCapacity 0 
 
-  lbn r15 Silo r2 Powered Minimum 
-  beqz r15 main
+main:
+  mod sp sp IngotIndex
+  add sp sp 1
+  peek ItemHash
 
   # Update the capacity
-  sbn Switch r2 Open 0
+  sbn Switch ItemHash Open 0
   yield
-  lbn r15 Memory r2 Setting Average 
-  lbn r14 Silo r2 ExportCount Sum
-  lbn r13 Stacker r2 Setting
-  mul r14 r14 r13
-  add r15 r15 r14
-  sbn Memory r2 Setting r15 
-  sbn Silo r2 ClearMemory 1
-  sbn Switch r2 Open 1
+  lbn r15 Memory ItemHash Setting Average
+  lbn r14 Silo ItemHash ExportCount Minimum
+  sub r15 r15 r14
+  sbn Memory ItemHash Setting r15 
+  sbn Silo ItemHash ClearMemory 1
+  sbn Switch ItemHash Open 1
+  j vend
 
-  blez r15 main
-  move r14 SiloMax
-  blt sp IceIndex vend
-
-  # Update ore silo capacity 
-  sbn Switch ItemOre Open 0
+quiesce:
   yield
-  sbn r14 Memory ItemOre Setting 
-  lbn r13 Silo ItemOre ExportCount Sum
-  add r14 r14 r13
-  sbn Memory ItemOre Setting r14
-  sbn Silo ItemOre ClearMemory 1
-  sbn Switch ItemOre Open 1
-  blez r14 main
+  l r14 VendingMachine ExportCount
+  lbn r13 Stacker ItemOre ImportCount Sum
+  blt r13 r14 quiesce
+  s VendingMachine ClearMemory 1
+  sbn Stacker ItemOre ClearMemory 1
+  lbn OreQuantity Silo ItemOre Quantity Minimum
 
 vend:
-  s VendingMachine RequestHash r2
+  bge r15 SiloMax main
+  move r14 OreStackSize
+  brle sp OreIndex 3
+  bge OreQuantity SiloMax quiesce
+  add OreQuantity OreQuantity 1
+  move r14 IngotStackSize
+  s VendingMachine RequestHash ItemHash
   ls r13 VendingMachine 1 Quantity
   beqz r13 main
-  sub r15 r15 r13
-  sbn Memory r2 Setting r15
-
-  brlt sp IceIndex 2
-  sub r14 r14 1
-  sbn Memory ItemOre Setting r14
-
-  blez r15 main
-  blez r14 main 
+  div r14 r13 r14
+  add r15 r15 r14
+  sbn Memory ItemHash Setting r15 
   yield
   j vend
