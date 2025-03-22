@@ -39,6 +39,7 @@ alias VendingMachine d0
 sbn Stacker Ore Setting OreStackSize
 sbn Stacker Ingot Setting IngotStackSize
 move OreCapacity SiloMax
+s db Setting 1
 
 main:
   mod sp sp IngotIndex
@@ -58,6 +59,7 @@ main:
   j vend
 
 quiesce:
+  s db Setting 0
   yield
   l r13 VendingMachine ExportCount
   lbn r12 Stacker ItemOre ImportCount Sum
@@ -67,7 +69,10 @@ quiesce:
   lbn OreQuantity Silo ItemOre Quantity Minimum
 
 vend:
-  bge OreQuantity SiloMax quiesce 
+  l r13 VendingMachine Power
+  beqz r13 quiesce
+  bge OreQuantity SiloMax quiesce
+  s db Setting 1
   bge r14 SiloMax main
   s VendingMachine RequestHash ItemHash
   ls r13 VendingMachine 1 Quantity
