@@ -36,11 +36,13 @@ push HASH("ItemSiliconOre")
 move IngotIndex sp
 
 alias VendingMachine d0
+alias Reset d1
 
 sbn Stacker Ore Setting OreStackSize
 sbn Stacker Ingot Setting IngotStackSize
 move OreCapacity SiloMax
 s db Setting 1
+s Reset Lock 1
 
 main:
   mod sp sp IngotIndex
@@ -60,15 +62,21 @@ main:
   j vend
 
 quiesce:
+  s Reset Lock 0
+  l r13 Reset Setting
+  bnez r13 Reset
   s db Setting 0
   yield
   l r13 VendingMachine ExportCount
   lbn r12 Stacker ItemOre ImportCount Sum
   blt r12 r13 quiesce
+
+reset:
   s VendingMachine ClearMemory 1
   sbn Stacker ItemOre ClearMemory 1
   sbn ChuteOutlet ItemOre ClearMemory 1
   lbn OreQuantity Silo ItemOre Quantity Minimum
+  s Reset Lock 1
 
 vend:
   l r13 VendingMachine Power
