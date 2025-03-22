@@ -38,7 +38,7 @@ alias VendingMachine d0
 
 sbn Stacker Ore Setting OreStackSize
 sbn Stacker Ingot Setting IngotStackSize
-move OreCapacity 0 
+move OreCapacity SiloMax
 
 main:
   mod sp sp IngotIndex
