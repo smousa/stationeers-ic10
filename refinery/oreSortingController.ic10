@@ -6,6 +6,7 @@ define Silo HASH("StructureSDBSilo")
 define Stacker HASH("StructureStacker")
 define Memory HASH("StructureLogicMemory")
 define Switch HASH("StructureLogicSwitch2")
+define ChuteOutlet HASH("StructureChuteOutlet")
 
 define Ore HASH("ItemOre")
 define Ingot HASH("ItemIngot")
@@ -66,11 +67,14 @@ quiesce:
   blt r12 r13 quiesce
   s VendingMachine ClearMemory 1
   sbn Stacker ItemOre ClearMemory 1
+  sbn ChuteOutlet ItemOre ClearMemory 1
   lbn OreQuantity Silo ItemOre Quantity Minimum
 
 vend:
   l r13 VendingMachine Power
   beqz r13 quiesce
+  lbn r13 ChuteOutlet ItemOre ExportCount Sum
+  bnez r13 quiesce
   bge OreQuantity SiloMax quiesce
   s db Setting 1
   bge r14 SiloMax main
