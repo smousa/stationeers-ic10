@@ -1,0 +1,82 @@
+define SiloMax 600
+define OreStackSize 50
+define IngotStackSize 500
+
+# Structures
+define Silo HASH("StructureSDBSilo")
+define Stacker HASH("StructureStacker")
+define Memory HASH("StructureMemory")
+define Switch HASH("StructureLogicSwitch2")
+
+# Networks
+define ResourceOre HASH("ItemOre")
+define ResourceIngot HASH("ItemIngot")
+
+# Iterables
+alias OreIndex r0
+alias IngotIndex r1
+move sp 0
+push HASH("ItemIce")
+push HASH("ItemOxite")
+push HASH("ItemNitrice")
+push HASH("ItemVolatiles")
+push HASH("ItemCobaltOre")
+push HASH("ItemCoalOre")
+move OreIndex sp
+push HASH("ItemIronOre")
+push HASH("ItemCopperOre")
+push HASH("ItemGoldOre")
+push HASH("ItemSilverOre")
+push HASH("ItemNickelOre")
+push HASH("ItemLeadOre")
+push HASH("ItemSiliconOre")
+move IngotIndex sp
+
+# Devices
+alias VendingMachine d0
+alias PauseSwitch d1
+
+# Initializations
+s db Setting 1
+sbn Stacker ResourceOre Setting OreStackSize
+sbn Stacker ResourceIngot Setting IngotStackSize
+
+alias ItemHash r2
+alias ItemType r3
+
+main:
+  mod sp sp IngotIndex
+  add sp sp 1
+  peek ItemHash
+  sle ItemType sp OreIndex
+
+  # Update the capacity
+  sbn Switch ItemHash Open 0
+  yield
+  lbn r15 Memory ItemHash Setting Average
+  lbn r14 Silo ItemHash ExportCount Average
+  sub r15 r15 r14
+  sbn Memory ItemHash Setting r15
+  sbn Silo ItemHash ClearMemory 1
+  sbn Switch ItemHash Open 1
+
+vend:
+  l r14 VendingMachine Power
+  beqz r14 done
+  l r14 PauseSwitch Setting
+  beqz r14 done
+  bge r15 SiloMax main
+  
+  # Release resources
+  s VendingMachine RequestHash
+  ls r13 VendingMachine 1 Quantity
+  beqz r13 main
+  select r12 ItemType OreStackSize IngotStackSize
+  div r13 r13 r12
+  add r15 r15 r13
+  sbn Memory ItemHash Setting r15
+  
+done:
+  s db Setting r14
+  yield
+  j vend
