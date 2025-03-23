@@ -18,6 +18,8 @@ main:
   l ItemHash drIndex NameHash
   l ItemCount drIndex ExportCount
 
+  sbn Switch ItemHash Lock 1
+
   # Check for overflow
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
   beqz r15 done
