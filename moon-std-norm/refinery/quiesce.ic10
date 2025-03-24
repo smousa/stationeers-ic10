@@ -22,7 +22,7 @@ main:
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
   lbn r14 Switch ItemHash Open Average
   beqz r14 quiesce 
-  bnez r15 done
+  beqz r15 done
   sbn Switch ItemHash Open 0
 
 quiesce:
