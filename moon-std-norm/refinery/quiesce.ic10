@@ -14,7 +14,7 @@ alias ItemCount r2
 move Index 0
 
 main:
-  bdns drIndex done
+  bdns dIndex done
   l ItemHash dIndex NameHash
   l ItemCount dIndex ExportCount
 
