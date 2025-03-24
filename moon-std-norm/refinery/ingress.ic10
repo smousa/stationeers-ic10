@@ -1,6 +1,7 @@
 define SiloMax 600
 define OreStackSize 50
 define IngotStackSize 500
+define PurgeThreshold 0.8
 
 # Structures
 define Silo HASH("StructureSDBSilo")
@@ -34,11 +35,12 @@ move IngotIndex sp
 
 # Devices
 alias VendingMachine d0
-alias PauseSwitch d1
+alias Sorter d1
+alias Pause d2
 
 # Initializations
-s db Setting 1
 s VendingMachine Lock 1
+s Sorter Mode 2 # Logic
 sbn Stacker ResourceOre Setting OreStackSize
 sbn Stacker ResourceIngot Setting IngotStackSize
 
@@ -46,6 +48,7 @@ alias ItemHash r2
 alias ItemType r3
 
 main:
+  s db Setting 1
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
@@ -62,23 +65,33 @@ main:
   sbn Switch ItemHash Open 1
 
 vend:
+  s db Setting 0
   l r14 VendingMachine Power
-  beqz r14 done
-  l r14 PauseSwitch Setting
-  beqz r14 done
-  bge r15 SiloMax main
-  
+  beqz r14 vend
+  l r14 Pause Setting
+  beqz r14 vend
+  l r14 VendingMachine RequestHash
+  bnez r14 vend
+  l r14 VendingMachine ExportCount
+  l r13 Sorter ExportCount 
+  bneq r14 r13 vend
+
+  # Choose output
+  sge r14 r15 SiloMax
+  s Sorter Output r14
+  l r13 VendingMachine Ratio
+  sge r13 r13 PurgeThreshold
+  select r13 r14 r13 1
+  beqz r13 main
+   
   # Release resources
-  s VendingMachine RequestHash
+  s db Setting 1
+  s VendingMachine RequestHash ItemHash
   ls r13 VendingMachine 1 Quantity
   beqz r13 main
+  bnez r14 vend
   select r12 ItemType OreStackSize IngotStackSize
   div r13 r13 r12
   add r15 r15 r13
   sbn Memory ItemHash Setting r15
-  
-done:
-  s db Setting r14
-  s VendingMachine Lock r14
-  yield
   j vend
