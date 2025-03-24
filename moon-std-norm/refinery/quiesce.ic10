@@ -37,14 +37,14 @@ main:
   j done
 
 reset:
-  lbn r15 Stacker Power Minimum
-  beqz r15 0 done
   s dIndex ClearMemory 1
   sbn Stacker ItemHash ClearMemory 1
   sbn ChuteOutlet ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
 
 done:
+  lb r15 Stacker Power Minimum
+  beqz r15 done
   add Index Index 1
   mod Index Index DeviceMax
   j main
