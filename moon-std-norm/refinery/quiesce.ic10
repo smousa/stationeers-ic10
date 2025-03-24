@@ -15,8 +15,8 @@ move Index 0
 
 main:
   bdns drIndex done
-  l ItemHash drIndex NameHash
-  l ItemCount drIndex ExportCount
+  l ItemHash dIndex NameHash
+  l ItemCount dIndex ExportCount
 
   sbn Switch ItemHash Lock 1
 
@@ -37,7 +37,7 @@ main:
   j done
 
 reset:
-  s drIndex ClearMemory 1
+  s dIndex ClearMemory 1
   sbn Stacker ItemHash ClearMemory 1
   sbn ChuteOutlet ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
