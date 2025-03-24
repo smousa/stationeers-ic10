@@ -38,6 +38,7 @@ alias PauseSwitch d1
 
 # Initializations
 s db Setting 1
+s VendingMachine Lock 1
 sbn Stacker ResourceOre Setting OreStackSize
 sbn Stacker ResourceIngot Setting IngotStackSize
 
