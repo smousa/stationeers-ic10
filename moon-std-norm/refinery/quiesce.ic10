@@ -22,6 +22,7 @@ main:
 
   # Check for overflow
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
+  sbn ChuteValve ItemHash Quantity r15
   beqz r15 done
 
   # Quiesce
@@ -32,7 +33,6 @@ main:
   bneq r14 ItemCount done
   lbn r14 ChuteValve ItemHash Open Average
   bnez r14 done
-  sbn ChuteValve ItemHash Quantity r15
   sbn ChuteValve ItemHash Open 1
   j done
 
