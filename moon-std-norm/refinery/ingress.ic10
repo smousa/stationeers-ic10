@@ -78,5 +78,6 @@ vend:
   
 done:
   s db Setting r14
+  s VendingMachine Lock r14
   yield
   j vend
