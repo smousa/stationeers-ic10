@@ -94,4 +94,5 @@ vend:
   div r13 r13 r12
   add r15 r15 r13
   sbn Memory ItemHash Setting r15
+  bge r15 SiloMax main
   j vend
