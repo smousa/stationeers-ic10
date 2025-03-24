@@ -89,7 +89,7 @@ vend:
   s VendingMachine RequestHash ItemHash
   ls r13 VendingMachine 1 Quantity
   beqz r13 main
-  bnez r14 vend
+  bnez r14 main
   select r12 ItemType OreStackSize IngotStackSize
   div r13 r13 r12
   add r15 r15 r13
