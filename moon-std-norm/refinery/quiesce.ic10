@@ -1,4 +1,4 @@
-define DeviceMax 6
+define DeviceMax 2
 
 # Structures
 define Stacker HASH("StructureStacker")
