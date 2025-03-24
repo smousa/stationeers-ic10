@@ -24,17 +24,17 @@ main:
   lbn r15 Switch ItemHash Open Average
   beqz r15 quiesce
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
+  beqz r15 done
   sbn ChuteValve ItemHash Quantity r15
   sbn ChuteOutlet ItemHash ClearMemory 1
-  beqz r15 done
   sbn Switch ItemHash Open 0
 
 quiesce:
-  lbn r15 ChuteValve ItemHash Quantity Average
-  lbn r14 Stacker ItemHash ImportCount Sum
-  beq r14 ItemCount reset
-  add r14 r14 r15
-  bneq r14 ItemCount done
+  lbn r15 Stacker ItemHash ImportCount Sum
+  beq r15 ItemCount reset
+  lbn r14 ChuteValve ItemHash Quantity Average
+  add r15 r15 r14
+  bneq r15 ItemCount done
   sbn ChuteValve ItemHash Open 1
   j done
 
