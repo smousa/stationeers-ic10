@@ -44,55 +44,60 @@ s Sorter Mode 2 # Logic
 sbn Stacker ResourceOre Setting OreStackSize
 sbn Stacker ResourceIngot Setting IngotStackSize
 
-alias ItemHash r2
-alias ItemType r3
+alias ItemHash  r2
+alias ItemType  r3
+alias ItemQuantity r4
 
 main:
-  s db Setting 1
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
   sle ItemType sp OreIndex
 
+refresh:
+  l r15 VendingMachine Power
+  beqz r15 refresh
+  l r15 Pause Setting
+  beqz r15 refresh
+
   # Update the capacity
   sbn Switch ItemHash Open 0
   yield
-  lbn r15 Memory ItemHash Setting Average
+  lbn ItemQuantity Memory ItemHash Setting Average
   lbn r14 Silo ItemHash ExportCount Average
-  sub r15 r15 r14
-  sbn Memory ItemHash Setting r15
+  sub ItemQuantity ItemQuantity r14
+  sbn Memory ItemHash Setting ItemQuantity 
   sbn Silo ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
 
 vend:
-  s db Setting 0
-  l r14 VendingMachine Power
-  beqz r14 vend
-  l r14 Pause Setting
-  beqz r14 vend
-  l r14 VendingMachine RequestHash
-  bnez r14 vend
-  l r14 VendingMachine ExportCount
-  l r13 Sorter ExportCount 
-  bneq r14 r13 vend
+  l r15 VendingMachine Power
+  beqz r15 refresh
+  l r15 Pause Setting
+  beqz r15 refresh
+
+  l r15 VendingMachine RequestHash
+  bnez r15 vend
+  l r15 VendingMachine ExportCount
+  l r14 Sorter ExportCount 
+  bneq r15 r14 vend
 
   # Choose output
-  sge r14 r15 SiloMax
-  s Sorter Output r14
-  l r13 VendingMachine Ratio
-  sge r13 r13 PurgeThreshold
-  select r13 r14 r13 1
-  beqz r13 main
+  sge r15 ItemQuantity SiloMax
+  s Sorter Output r15
+  l r14 VendingMachine Ratio
+  sge r14 r14 PurgeThreshold
+  select r14 r15 r14 1
+  beqz r14 main
    
   # Release resources
-  s db Setting 1
   s VendingMachine RequestHash ItemHash
-  ls r13 VendingMachine 1 Quantity
-  beqz r13 main
-  bnez r14 main
-  select r12 ItemType OreStackSize IngotStackSize
-  div r13 r13 r12
-  add r15 r15 r13
-  sbn Memory ItemHash Setting r15
-  bge r15 SiloMax main
+  ls r14 VendingMachine 1 Quantity
+  beqz r14 main
+  bnez r15 main
+  select r13 ItemType OreStackSize IngotStackSize
+  div r14 r14 r13
+  add ItemQuantity ItemQuantity r14
+  sbn Memory ItemHash Setting ItemQuantity
+  bge ItemQuantity SiloMax main
   j vend
