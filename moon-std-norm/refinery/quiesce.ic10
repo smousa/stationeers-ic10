@@ -18,7 +18,7 @@ main:
 
   # get overflow
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
-  lbn r14 Switch ItemHash Open Average
+  lbn r14 Switch ItemHash Open Minimum
   beqz r14 quiesce
   beqz r15 done
   sbn Switch ItemHash Open 0
