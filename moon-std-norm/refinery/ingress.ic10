@@ -49,54 +49,48 @@ alias ItemType  r3
 alias ItemQuantity r4
 
 main:
+  l r15 VendingMachine Power
+  beqz r15 main
+
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
   sle ItemType sp OreIndex
 
-refresh:
-  l r15 VendingMachine Power
-  beqz r15 refresh
-  l r15 Pause Setting
-  beqz r15 refresh
-
-  # Update the capacity
+  # get capacity 
   sbn Switch ItemHash Open 0
   yield
   lbn ItemQuantity Memory ItemHash Setting Average
-  lbn r14 Silo ItemHash ExportCount Average
-  sub ItemQuantity ItemQuantity r14
-  sbn Memory ItemHash Setting ItemQuantity 
+  lbn r15 Silo ItemHash ExportCount Average
+  sub ItemQuantity ItemQuantity r15
+  sbn Memory ItemHash Setting ItemQuantity
   sbn Silo ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
 
-vend:
-  l r15 VendingMachine Power
-  beqz r15 refresh
-  l r15 Pause Setting
-  beqz r15 refresh
-
-  l r15 VendingMachine RequestHash
-  bnez r15 vend
-  l r15 VendingMachine ExportCount
-  l r14 Sorter ExportCount 
-  bneq r15 r14 vend
-
-  # Choose output
+  # check capacity
   sge r15 ItemQuantity SiloMax
-  s Sorter Output r15
+  breqz r15 2
   l r14 VendingMachine Ratio
-  sge r14 r14 PurgeThreshold
-  select r14 r15 r14 1
-  beqz r14 main
-   
-  # Release resources
+  blt r14 PurgeThreshold main
+
+vend:
+  l r14 VendingMachine Power
+  beqz r14 vend
+  l r14 Pause Setting
+  beqz r14 vend
+  l r14 Sorter Output
+  bneq r14 -1 vend
+
+  # release item
   s VendingMachine RequestHash ItemHash
   ls r14 VendingMachine 1 Quantity
   beqz r14 main
+  s Sorter Output r15
   bnez r15 main
   select r13 ItemType OreStackSize IngotStackSize
   div r14 r14 r13
+
+  # update capacity
   add ItemQuantity ItemQuantity r14
   sbn Memory ItemHash Setting ItemQuantity
   bge ItemQuantity SiloMax main
