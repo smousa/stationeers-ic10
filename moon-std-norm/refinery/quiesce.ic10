@@ -9,29 +9,31 @@ define ChuteValve HASH("StructureChuteDigitalValveLeft")
 # Registers
 alias Index r0
 alias ItemHash r1
-alias ItemCount r2
 
 move Index 0
 
 main:
   bdns dIndex done
   l ItemHash dIndex NameHash
-  l ItemCount dIndex ExportCount
 
-  # Check for overflow
+  # get overflow
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
   lbn r14 Switch ItemHash Open Average
-  beqz r14 quiesce 
+  beqz r14 quiesce
   beqz r15 done
   sbn Switch ItemHash Open 0
 
 quiesce:
-  lbn r14 Stacker ItemHash ImportCount Sum
-  beq r14 ItemCount reset
-  add r14 r15 r14
-  bneq r14 ItemCount done
-  sbn ChuteValve ItemHash Quantity r15
-  sbn ChuteValve ItemHash Open 1
+  # get outstanding capacity 
+  l r14 dIndex ExportCount
+  lbn r13 Stacker ItemHash ImportCount Sum
+  sub r14 r14 r13
+  beqz r14 reset
+  bneq r15 r14 done
+
+  # release overflow
+  sbn ChuteValve ItemHash Setting r15 
+  sbn ChuteValve ItemHash Open 1 
   sbn ChuteOverflow ItemHash ClearMemory 1
   j done
 
@@ -41,7 +43,7 @@ reset:
   sbn Switch ItemHash Open 1
 
 done:
-  lb r15 Stacker Power Minimum
+  lbn r15 Stacker Power Minimum
   beqz r15 done
   add Index Index 1
   mod Index Index DeviceMax
