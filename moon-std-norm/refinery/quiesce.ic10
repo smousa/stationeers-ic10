@@ -40,6 +40,7 @@ quiesce:
 reset:
   s dIndex ClearMemory 1
   sbn Stacker ItemHash ClearMemory 1
+  sbn ChuteValve Open 0
   sbn Switch ItemHash Open 1
 
 done:
