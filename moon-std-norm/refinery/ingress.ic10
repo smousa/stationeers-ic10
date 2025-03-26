@@ -39,7 +39,6 @@ alias Sorter d1
 alias Pause d2
 
 # Initializations
-s VendingMachine Lock 1
 s Sorter Mode 2 # Logic
 sbn Stacker ResourceOre Setting OreStackSize
 sbn Stacker ResourceIngot Setting IngotStackSize
