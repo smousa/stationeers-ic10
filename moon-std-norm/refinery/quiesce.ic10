@@ -24,6 +24,8 @@ main:
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
   lbn r14 Switch ItemHash Open Minimum
   beqz r14 quiesce
+  lbn r14 Override ItemHash Open Minimum
+  brnez r14 1
   beqz r15 done
   sbn Switch ItemHash Open 0
 
