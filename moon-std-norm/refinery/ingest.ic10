@@ -1,0 +1,20 @@
+# Devices
+alias d0 ImportChute
+alias d1 VendingMachine
+alias d2 Unloader
+alias d3 DiodeSlide
+
+# Initializations
+s d1 Mode 1
+
+main:
+  l r15 VendingMachine Ratio
+  floor r15 r15
+  ls r14 Unloader 0 Occupied  
+  max r13 r15 r14
+  s ExportChute Lock r13
+  s DiodeSlide On r13
+  s DiodeSlide Mode r14
+  seqz r13 r15
+  s Unloader Output r13
+  j main 
