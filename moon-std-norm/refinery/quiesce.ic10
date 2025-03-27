@@ -18,6 +18,8 @@ main:
   bdns dIndex done
   l ItemHash dIndex NameHash
 
+  sbn Switch ItemHash Lock 1
+
   # get overflow
   lbn r15 ChuteOverflow ItemHash ExportCount Sum
   lbn r14 Switch ItemHash Open Minimum
