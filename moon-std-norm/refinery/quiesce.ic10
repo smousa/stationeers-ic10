@@ -1,6 +1,8 @@
 define DeviceMax 2
 
 # Structures
+define Override HASH("StructureLogicSwitch")
+define FlashingLight HASH("StructureFlashingLight")
 define Stacker HASH("StructureStacker")
 define Switch HASH("StructureLogicSwitch2")
 define ChuteOverflow HASH("StructureChuteOutlet")
@@ -28,6 +30,8 @@ quiesce:
   l r14 dIndex ExportCount
   lbn r13 Stacker ItemHash ImportCount Sum
   sub r14 r14 r13
+  seqz r13 r14
+  sbn FlashingLight ItemHash On r13
   beqz r14 reset
   bneq r15 r14 done
 
@@ -38,6 +42,8 @@ quiesce:
   j done
 
 reset:
+  lbn r15 Override ItemHash Open Minimum
+  bnez r15 done
   s dIndex ClearMemory 1
   sbn Stacker ItemHash ClearMemory 1
   sbn ChuteValve Open 0
