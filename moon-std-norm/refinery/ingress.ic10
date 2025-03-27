@@ -59,8 +59,8 @@ main:
   # get capacity 
   sbn Switch ItemHash Open 0
   yield
-  lbn ItemQuantity Memory ItemHash Setting Average
-  lbn r15 Silo ItemHash ExportCount Average
+  lbn ItemQuantity Memory ItemHash Setting Maximum
+  lbn r15 Silo ItemHash ExportCount Maximum
   sub ItemQuantity ItemQuantity r15
   sbn Memory ItemHash Setting ItemQuantity
   sbn Silo ItemHash ClearMemory 1
