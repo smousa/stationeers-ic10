@@ -1,6 +1,5 @@
 define SiloMax 600
 define OreStackSize 50
-define IngotStackSize 500
 define PurgeThreshold 0.8
 
 # Structures
@@ -34,23 +33,20 @@ push HASH("ItemSiliconOre")
 move IngotIndex sp
 
 # Devices
-alias VendingMachine d0
-alias Sorter d1
-alias Pause d2
+alias PowerController d0
+alias VendingMachine d1
+alias Sorter d2
+alias Pause d3
 
 # Initializations
+s db 1
 s Sorter Mode 2 # Logic
-sbn Stacker ResourceOre Setting OreStackSize
-sbn Stacker ResourceIngot Setting IngotStackSize
+sb Stacker Setting OreStackSize
 
 alias ItemHash  r2
-alias ItemType  r3
-alias ItemQuantity r4
+alias ItemQuantity r3
 
 main:
-  l r15 VendingMachine Power
-  beqz r15 main
-
   mod sp sp IngotIndex
   add sp sp 1
   peek ItemHash
@@ -66,31 +62,34 @@ main:
   sbn Silo ItemHash ClearMemory 1
   sbn Switch ItemHash Open 1
 
-  # check capacity
-  sge r15 ItemQuantity SiloMax
-  breqz r15 2
-  l r14 VendingMachine Ratio
-  blt r14 PurgeThreshold main
-
+  move r14 0 # Purge Toggle
 vend:
-  l r14 VendingMachine Power
-  beqz r14 vend
-  l r14 Pause Setting
-  beqz r14 vend
-  l r14 Sorter Output
-  bneq r14 -1 vend
+  s db Setting 0
+  l r13 PowerController Mode
+  ble r13 2 vend
+  l r13 Pause Setting
+  bnez r14 1 vend
+  l r13 Sorter Output 
+  bneq r13 -1 vend
+  s db Setting 1
+
+  # check capacity
+  slt r13 ItemQuantity SiloMax
+  brnez r13 3
+  bnez r14 main
+  l r12 VendingMachine Ratio
+  blt r12 PurgeThreshold main
+  move r14 1 # Always Purge Toggle
 
   # release item
   s VendingMachine RequestHash ItemHash
-  ls r14 VendingMachine 1 Quantity
-  beqz r14 main
-  s Sorter Output r15
-  bnez r15 main
-  select r13 ItemType OreStackSize IngotStackSize
-  div r14 r14 r13
+  ls r12 VendingMachine 1 Quantity
+  beqz r12 main
+  s Sorter Output r13
+  beqz r13 main
+  div r12 r12 OreStackSize
 
   # update capacity
-  add ItemQuantity ItemQuantity r14
+  add ItemQuantity ItemQuantity r12
   sbn Memory ItemHash Setting ItemQuantity
-  bge ItemQuantity SiloMax main
   j vend
