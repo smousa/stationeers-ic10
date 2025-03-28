@@ -33,10 +33,9 @@ push HASH("ItemSiliconOre")
 move IngotIndex sp
 
 # Devices
-alias PowerController d0
-alias VendingMachine d1
-alias Sorter d2
-alias Pause d3
+alias VendingMachine d0
+alias Sorter d1
+alias Pause d2
 
 # Initializations
 s db 1
@@ -65,7 +64,7 @@ main:
   move r14 0 # Purge Toggle
 vend:
   s db Setting 0
-  l r13 PowerController Mode
+  l r13 VendingMachine Power 
   ble r13 2 vend
   l r13 Pause Setting
   bnez r14 1 vend
